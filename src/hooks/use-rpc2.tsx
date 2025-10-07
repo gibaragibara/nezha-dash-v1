@@ -56,9 +56,9 @@ export const RPC2Provider: React.FC<{ children: React.ReactNode }> = ({ children
         setConnectionState(client.state);
         console.log(`RPC2 重连尝试 ${attempt}`);
       },
-      onMessage: (data) => {
-        //console.debug("RPC2 消息:", data);
-      },
+      //onMessage: (data) => {
+      //  //console.debug("RPC2 消息:", data);
+      //},
     });
 
     // 清理函数

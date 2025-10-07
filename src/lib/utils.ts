@@ -1,4 +1,5 @@
 import { SharedClient } from "@/hooks/use-rpc2"
+import { formatBytes } from "@/lib/format"
 import { NezhaServer, NezhaWebsocketResponse } from "@/types/nezha-api"
 import { type ClassValue, clsx } from "clsx"
 import dayjs from "dayjs"
@@ -337,6 +338,125 @@ const countryFlagToCode = (flag: string): string => {
   return [...flag].map((c) => String.fromCharCode(c.codePointAt(0)! - 127397 + 32)).join("")
 }
 
+// 根据 common:getNodes 的字段构造/合并公开备注（public_note）
+// 目标结构：{ billingDataMod: { startDate,endDate,autoRenewal,cycle,amount }, planDataMod: { bandwidth,trafficVol,trafficType,IPv4,IPv6,networkRoute,extra } }
+function deriveCycleLabel(billing_cycle?: number): string {
+  const bc = Number(billing_cycle || 0)
+  if (!bc) return ""
+  if (bc >= 360) return "年"
+  if (bc >= 180) return "半年"
+  if (bc >= 90) return "季"
+  if (bc >= 30) return "月"
+  if (bc == -1) return "一次性"
+  return `${bc}天`
+}
+
+// 清洗 tags：将分隔符 ";" 替换为空格，并移除颜色标签（不区分大小写）
+function sanitizeTags(tags: string): string {
+  const COLORS = [
+    "Gray",
+    "Gold",
+    "Bronze",
+    "Brown",
+    "Yellow",
+    "Amber",
+    "Orange",
+    "Tomato",
+    "Red",
+    "Ruby",
+    "Crimson",
+    "Pink",
+    "Plum",
+    "Purple",
+    "Violet",
+    "Iris",
+    "Indigo",
+    "Blue",
+    "Cyan",
+    "Teal",
+    "Jade",
+    "Green",
+    "Grass",
+    "Lime",
+    "Mint",
+    "Sky",
+  ]
+  const colorPattern = new RegExp(`<\\s*(?:${COLORS.join("|")})\\s*>`, "ig")
+  return tags
+    .split(";")
+    .map((part) => part.replace(colorPattern, "").trim())
+    .filter(Boolean)
+    .join(" ")
+}
+
+function buildPublicNoteFromNode(server: any, existingPublicNote?: string): string {
+  try {
+    // 如果已有结构化的 public_note，先解析出来以便合并
+    let existing = parsePublicNote(existingPublicNote || "") || undefined
+
+    const bc: number = Number(server?.billing_cycle || 0)
+    const autoRenewal: string = server?.auto_renewal === true || server?.auto_renewal === 1 || server?.auto_renewal === "1" ? "1" : "0"
+    const cycle: string = deriveCycleLabel(bc) || String(bc || "")
+    const amount: string =
+      server?.price != null && server?.price !== 0
+        ? server?.currency
+          ? `${server.price == -1 ? "" :server.currency}${server.price == -1 ? "免费" : server.price}`
+          : String(server.price)
+        : ""
+
+    // 起止时间：优先使用 created_at/expired_at；若缺失 startDate 且存在 bc+expired_at，则回推
+    const expiredRaw: string = server?.expired_at || ""
+    const endDate: string =
+      expiredRaw && dayjs(expiredRaw).isValid() && dayjs(expiredRaw).diff(dayjs(), "year", true) > 100
+        ? "0000-00-00T23:59:59+08:00"
+        : expiredRaw
+    // 生成 startDate；若其年份小于 0002 年，则视为未填写（置为空）
+    const startDateCandidate =
+      server?.created_at || (expiredRaw && bc ? dayjs(expiredRaw).subtract(bc, "day").toISOString() : null)
+    const startDate =
+      startDateCandidate && dayjs(startDateCandidate).isValid() && dayjs(startDateCandidate).year() < 2 ? null : startDateCandidate
+
+    // 计划/流量信息（如果 traffic_limit 为 0，则不添加流量相关信息）
+    const trafficLimitNum = Number(server?.traffic_limit)
+    const hasTraffic =
+      server?.traffic_limit != null && server?.traffic_limit !== "" && !Number.isNaN(trafficLimitNum) && trafficLimitNum > 0
+    const trafficVol: string = hasTraffic ? formatBytes(trafficLimitNum) : ""
+    const trafficTypeFromNode: string = hasTraffic ? server?.traffic_limit_type || "" : ""
+    const extraFromNode: string =
+      server?.public_remark != null && server.public_remark !== ""
+        ? String(server.public_remark)
+        : server?.tags
+          ? sanitizeTags(String(server.tags))
+          : ""
+
+    const merged = {
+      billingDataMod: {
+        startDate: existing?.billingDataMod?.startDate || startDate,
+        endDate: existing?.billingDataMod?.endDate || endDate,
+        autoRenewal: existing?.billingDataMod?.autoRenewal || autoRenewal,
+        cycle: existing?.billingDataMod?.cycle || cycle === "-1" ? "" : cycle,
+        amount: existing?.billingDataMod?.amount || amount,
+      },
+      planDataMod: {
+        bandwidth: existing?.planDataMod?.bandwidth || "",
+        // 当 traffic_limit==0 时，不从节点写入流量信息
+        trafficVol: existing?.planDataMod?.trafficVol || trafficVol,
+        trafficType: existing?.planDataMod?.trafficType || trafficTypeFromNode,
+        IPv4: existing?.planDataMod?.IPv4 || (server?.ipv4 ? "1" : ""),
+        IPv6: existing?.planDataMod?.IPv6 || (server?.ipv6 ? "1" : ""),
+        networkRoute: existing?.planDataMod?.networkRoute || "",
+        // 若存在 public_remark，优先写入 extra；否则保留已有或使用 tags
+        extra: extraFromNode || existing?.planDataMod?.extra || "",
+      },
+    }
+
+    return JSON.stringify(merged)
+  } catch (e) {
+    console.error("buildPublicNoteFromNode error:", e)
+    return existingPublicNote || ""
+  }
+}
+
 export const komariToNezhaWebsocketResponse = (data: any): NezhaWebsocketResponse => {
   if (km_servers_cache.length === 0) {
     SharedClient()
@@ -469,7 +589,7 @@ export const komariToNezhaWebsocketResponse = (data: any): NezhaWebsocketRespons
     return {
       id: uuidToNumber(uuid),
       name: server.name,
-      public_note: server.public_note || "",
+      public_note: buildPublicNoteFromNode(server, server.public_note || ""),
       last_active: status ? status.time : "0000-00-00T00:00:00Z",
       country_code: countryFlagToCode(server.region),
       display_index: -server.weight || 0,
