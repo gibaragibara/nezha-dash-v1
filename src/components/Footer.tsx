@@ -19,14 +19,7 @@ const Footer: React.FC = () => {
       <section className="flex flex-col">
         <section className="mt-1 flex items-center sm:flex-row flex-col justify-between gap-2 text-[13px] font-light tracking-tight text-neutral-600/50 dark:text-neutral-300/50 server-footer-name">
           <div className="flex items-center gap-1">
-            &copy;2020-{new Date().getFullYear()}{" "}
-            <a href={"https://github.com/Akizon77/nezha-dash-v1"} target="_blank">
-              Nezha
-            </a>
-            <span className="flex items-center border-l border-gray-300 w-1 h-3"></span>
-            <p>Powered by <a href={"https://github.com/komari-monitor/komari"} target="_blank">Komari {settingData?.data?.version || ""}</a></p>
-            <span className="flex items-center border-l border-gray-300 w-1 h-3"></span>
-            <p>Modified by Akizon77</p>
+            <p>Powered by <a href={"https://github.com/komari-monitor/komari"} target="_blank">Komari Monitor</a></p>
           </div>
           <div className="server-footer-theme flex flex-col items-center sm:items-end">
             <p className="mt-1 text-[13px] font-light tracking-tight text-neutral-600/50 dark:text-neutral-300/50">
@@ -36,14 +29,9 @@ const Footer: React.FC = () => {
             </p>
             <section>
               {t("footer.themeBy")}
-              <a href={"https://github.com/hamster1963/nezha-dash"} target="_blank">
+              <a href={"https://github.com/Akizon77/nezha-dash-v1"} target="_blank">
                 nezha-dash
               </a>
-              {import.meta.env.VITE_GIT_HASH && (
-                <a href={"https://github.com/hamster1963/nezha-dash-v1/commit/" + import.meta.env.VITE_GIT_HASH} className="ml-1">
-                  ({import.meta.env.VITE_GIT_HASH})
-                </a>
-              )}
             </section>
           </div>
         </section>

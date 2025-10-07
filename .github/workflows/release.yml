@@ -28,6 +28,8 @@ jobs:
         run: npm run build
 
       - name: Update theme configuration
+        env:
+          RELEASE_VERSION: ${{ github.event.release.tag_name }}
         run: |
           # Get current date in YY.MM.DD format
           VERSION_DATE=$(date +"%y.%m.%d")
@@ -37,9 +39,10 @@ jobs:
           echo "VERSION_DATE=${VERSION_DATE}" >> $GITHUB_ENV
           echo "COMMIT_HASH=${COMMIT_HASH}" >> $GITHUB_ENV
 
-          jq --arg version "$VERSION_DATE" \
-           '.version = $version' \
-           komari-theme.json > komari-theme-updated.json
+          # Write release version (tag) to komari-theme.json, keep description unchanged
+          jq --arg version "$RELEASE_VERSION" \
+             '.version = $version' \
+             komari-theme.json > komari-theme-updated.json
 
           mv komari-theme-updated.json komari-theme.json
 
