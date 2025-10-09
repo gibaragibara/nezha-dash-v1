@@ -468,57 +468,61 @@ export const komariToNezhaWebsocketResponse = (data: any): NezhaWebsocketRespons
 
   // 如果还没有缓存，先按 data 渲染，避免首次为空
   if (!km_servers_cache || km_servers_cache.length === 0) {
-    const servers: any[] = Object.entries(data || {}).reduce((acc: any[], [uuid, status]: [string, any]) => {
-      const host = {
-        platform: status.os || "",
-        platform_version: status.kernel_version || "",
-        cpu: status.cpu_name ? [status.cpu_name] : [],
-        gpu: status.gpu_name ? [status.gpu_name] : [],
-        mem_total: status.ram_total || 0,
-        disk_total: status.disk_total || 0,
-        swap_total: status.swap_total || 0,
-        arch: status.arch || "",
-        boot_time: new Date(status.time).getTime() / 1000 - (status.uptime || 0),
-        version: "",
-      }
-
-      const state = {
-        cpu: status.cpu || 0,
-        mem_used: status.ram || 0,
-        swap_used: status.swap || 0,
-        disk_used: status.disk || 0,
-        net_in_transfer: status.net_total_down || 0,
-        net_out_transfer: status.net_total_up || 0,
-        net_in_speed: status.net_in || 0,
-        net_out_speed: status.net_out || 0,
-        uptime: status.uptime || 0,
-        load_1: status.load || 0,
-        load_5: status.load5 || 0,
-        load_15: status.load15 || 0,
-        tcp_conn_count: status.connections || 0,
-        udp_conn_count: status.connections_udp || 0,
-        process_count: status.process || 0,
-        temperatures: status.temp > 0 ? [{ Name: "CPU", Temperature: status.temp }] : [],
-        gpu: typeof status.gpu === "number" ? [status.gpu] : [],
-      }
-
-      acc.push({
-        id: uuidToNumber(uuid),
-        name: status.name || uuid,
-        public_note: "",
-        last_active: status.time,
-        country_code: status.region ? countryFlagToCode(status.region) : "",
-        display_index: 0,
-        host,
-        state,
-      })
-      return acc
-    }, [])
-
     return {
       now: Date.now(),
-      servers,
+      servers: [],
     }
+    // const servers: any[] = Object.entries(data || {}).reduce((acc: any[], [uuid, status]: [string, any]) => {
+    //   const host = {
+    //     platform: status.os || "",
+    //     platform_version: status.kernel_version || "",
+    //     cpu: status.cpu_name ? [status.cpu_name] : [],
+    //     gpu: status.gpu_name ? [status.gpu_name] : [],
+    //     mem_total: status.ram_total || 0,
+    //     disk_total: status.disk_total || 0,
+    //     swap_total: status.swap_total || 0,
+    //     arch: status.arch || "",
+    //     boot_time: new Date(status.time).getTime() / 1000 - (status.uptime || 0),
+    //     version: "",
+    //   }
+
+    //   const state = {
+    //     cpu: status.cpu || 0,
+    //     mem_used: status.ram || 0,
+    //     swap_used: status.swap || 0,
+    //     disk_used: status.disk || 0,
+    //     net_in_transfer: status.net_total_down || 0,
+    //     net_out_transfer: status.net_total_up || 0,
+    //     net_in_speed: status.net_in || 0,
+    //     net_out_speed: status.net_out || 0,
+    //     uptime: status.uptime || 0,
+    //     load_1: status.load || 0,
+    //     load_5: status.load5 || 0,
+    //     load_15: status.load15 || 0,
+    //     tcp_conn_count: status.connections || 0,
+    //     udp_conn_count: status.connections_udp || 0,
+    //     process_count: status.process || 0,
+    //     temperatures: status.temp > 0 ? [{ Name: "CPU", Temperature: status.temp }] : [],
+    //     gpu: typeof status.gpu === "number" ? [status.gpu] : [],
+    //   }
+
+    //   acc.push({
+    //     id: uuidToNumber(uuid),
+    //     name: status.name || uuid,
+    //     public_note: "",
+    //     last_active: status.time,
+    //     country_code: status.region ? countryFlagToCode(status.region) : "",
+    //     display_index: 0,
+    //     host,
+    //     state,
+    //   })
+    //   return acc
+    // }, [])
+
+    // return {
+    //   now: Date.now(),
+    //   servers,
+    // }
   }
 
   // 按缓存列表展示；如果 data 中没有该 uuid，则视为离线
