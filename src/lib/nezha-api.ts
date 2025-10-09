@@ -88,6 +88,7 @@ export const fetchMonitor = async (server_id: number): Promise<MonitorResponse> 
         server_name: serverName,
         created_at: [],
         avg_delay: [],
+        packet_loss: [task.loss??0],
       })
     }
 
