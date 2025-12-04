@@ -60,22 +60,13 @@ const MainApp: React.FC = () => {
     // 选择桌面端或移动端背景
     const bgUrl = isMobile && config.backgroundImageMobile ? config.backgroundImageMobile : config.backgroundImage
     
-    console.log("=== 背景图片调试信息 ===")
-    console.log("isMobile:", isMobile)
-    console.log("config.backgroundImage:", config.backgroundImage)
-    console.log("config.backgroundImageMobile:", config.backgroundImageMobile)
-    console.log("选择的背景URL:", bgUrl)
-    
     if (!bgUrl) return ""
     
     // 处理亮色|暗色模式分隔
     const urls = bgUrl.split("|").map((u) => u.trim())
     if (urls.length > 1) {
-      const finalUrl = isDark ? urls[1] : urls[0]
-      console.log("isDark:", isDark, "最终URL:", finalUrl)
-      return finalUrl
+      return isDark ? urls[1] : urls[0]
     }
-    console.log("最终URL:", urls[0])
     return urls[0]
   }, [theme, isMobile, config.backgroundImage, config.backgroundImageMobile])
 
@@ -109,15 +100,9 @@ const MainApp: React.FC = () => {
   // 合并自定义背景和配置背景，优先使用自定义背景
   const finalBackgroundImage = customBackgroundImage || configBackgroundImage
   
-  console.log("customBackgroundImage:", customBackgroundImage)
-  console.log("configBackgroundImage:", configBackgroundImage)
-  console.log("最终背景图片URL:", finalBackgroundImage)
-  console.log("isMobile:", isMobile)
-  
   // 解析背景对齐方式
   const backgroundAlignment = config.backgroundAlignment || "cover,center"
   const [bgSize, bgPosition] = backgroundAlignment.split(",").map((s: string) => s.trim())
-  console.log("背景对齐:", bgSize, bgPosition)
 
   return (
     <ErrorBoundary>

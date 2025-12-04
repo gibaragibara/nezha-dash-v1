@@ -248,11 +248,16 @@ export interface PublicNoteData {
   planDataMod?: PlanData
 }
 
+/**
+ * Attempts to parse a public note string into a structured PublicNoteData object.
+ * If the input string is not a valid JSON, it will silently return null.
+ */
 export function parsePublicNote(publicNote: string): PublicNoteData | null {
   try {
     if (!publicNote) {
       return null
     }
+    // 尝试解析 JSON，如果不是 JSON 格式（纯文本备注）则静默返回 null
     const data = JSON.parse(publicNote)
     if (!data.billingDataMod && !data.planDataMod) {
       return null
@@ -300,8 +305,8 @@ export function parsePublicNote(publicNote: string): PublicNoteData | null {
         extra: data.planDataMod.extra || "",
       },
     }
-  } catch (error) {
-    console.error("Error parsing public note:", error)
+  } catch {
+    // 静默处理非 JSON 格式的公开备注（纯文本备注）
     return null
   }
 }
@@ -392,7 +397,7 @@ function sanitizeTags(tags: string): string {
 function buildPublicNoteFromNode(server: any, existingPublicNote?: string): string {
   try {
     // 如果已有结构化的 public_note，先解析出来以便合并
-    let existing = parsePublicNote(existingPublicNote || "") || undefined
+    const existing = parsePublicNote(existingPublicNote || "") || undefined
     const bc: number = Number(server?.billing_cycle || 0)
     const autoRenewal: string = server?.auto_renewal === true || server?.auto_renewal === 1 || server?.auto_renewal === "1" ? "1" : "0"
     const cycle: string = deriveCycleLabel(bc) || String(bc || "")
