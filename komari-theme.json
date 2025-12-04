@@ -3,7 +3,49 @@
     "short": "NezhaV1",
     "description": "Nezha Dash V1 Theme for Komari Monitor",
     "version": "1.0.0",
-    "author": "Akizon77",
-    "url": "https://github.com/Akizon77/nezha-dash-v1",
-    "preview": "preview.png"
+    "author": "gibaragibara",
+    "url": "https://github.com/gibaragibara/nezha-dash-v1",
+    "preview": "preview.png",
+    "configuration": {
+        "type": "managed",
+        "data": [
+            {
+                "name": "主题设置",
+                "type": "title"
+            },
+            {
+                "key": "selectThemeColor",
+                "name": "主题颜色",
+                "type": "select",
+                "options": "gray,gold,bronze,brown,yellow,amber,orange,tomato,red,ruby,crimson,pink,plum,purple,violet,iris,indigo,blue,cyan,teal,jade,green,grass,lime,mint,sky",
+                "default": "violet",
+                "help": "设置主题颜色，颜色对照请参考: https://www.radix-ui.com/themes/docs/theme/color"
+            },
+            {
+                "name": "背景设置",
+                "type": "title"
+            },
+            {
+                "key": "backgroundImage",
+                "name": "桌面端背景图片链接",
+                "type": "string",
+                "default": "",
+                "help": "桌面端背景图片URL，支持使用竖线分隔亮色和暗色模式的图片，留空则无背景（例如: https://example.com/light.jpg|https://example.com/dark.jpg）"
+            },
+            {
+                "key": "backgroundImageMobile",
+                "name": "移动端背景图片链接",
+                "type": "string",
+                "default": "",
+                "help": "移动端背景图片URL，支持使用竖线分隔亮色和暗色模式的图片，留空则使用桌面端背景"
+            },
+            {
+                "key": "backgroundAlignment",
+                "name": "背景对齐方式",
+                "type": "string",
+                "default": "cover,center",
+                "help": "背景图片的对齐方式，使用逗号分隔大小和位置。大小可选: cover(覆盖), contain(包含), fill(填充); 位置可选: center(居中), top(顶部), bottom(底部), left(左侧), right(右侧)"
+            }
+        ]
+    }
 }

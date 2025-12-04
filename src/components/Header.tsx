@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 import NumberFlow, { NumberFlowGroup } from "@number-flow/react"
 import { useQuery } from "@tanstack/react-query"
 import { AnimatePresence, m } from "framer-motion"
-import { ImageMinus, LogIn } from "lucide-react"
+import { ImageMinus, LogIn, Settings } from "lucide-react"
 import { DateTime } from "luxon"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -17,12 +17,14 @@ import { useNavigate } from "react-router-dom"
 import { LanguageSwitcher } from "./LanguageSwitcher"
 import { SearchButton } from "./SearchButton"
 import { LoadingSpinner } from "./loading/Loader"
+import SettingsPanel from "./settings/SettingsPanel"
 import { Button } from "./ui/button"
 
 function Header() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { backgroundImage, updateBackground } = useBackground()
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const { data: settingData, isLoading } = useQuery({
     queryKey: ["setting"],
@@ -105,6 +107,17 @@ function Header() {
             <DashboardLink />
           </div>
           <SearchButton />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSettingsOpen(true)}
+            className={cn("rounded-full px-[9px] bg-white dark:bg-black", {
+              "bg-white/70 dark:bg-black/70": customBackgroundImage,
+            })}
+            title="主题设置"
+          >
+            <Settings className="w-4 h-4" />
+          </Button>
           <LanguageSwitcher />
           <ModeToggle />
           {(customBackgroundImage || sessionStorage.getItem("savedBackgroundImage")) && (
@@ -146,6 +159,7 @@ function Header() {
         <Links />
       </div>
       <Overview />
+      <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   )
 }

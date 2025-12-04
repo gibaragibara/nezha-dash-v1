@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom"
 
@@ -7,6 +7,7 @@ import { DashCommand } from "./components/DashCommand"
 import ErrorBoundary from "./components/ErrorBoundary"
 import Footer from "./components/Footer"
 import Header, { RefreshToast } from "./components/Header"
+import { useAppConfig } from "./config/hooks"
 import { useBackground } from "./hooks/use-background"
 import { useTheme } from "./hooks/use-theme"
 import { InjectContext } from "./lib/inject"
@@ -30,9 +31,11 @@ const MainApp: React.FC = () => {
     refetchOnWindowFocus: true,
   })
   const { i18n } = useTranslation()
-  const { setTheme } = useTheme()
+  const { setTheme, theme } = useTheme()
   const [isCustomCodeInjected, setIsCustomCodeInjected] = useState(false)
   const { backgroundImage: customBackgroundImage } = useBackground()
+  const { config } = useAppConfig()
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
 
   useEffect(() => {
     if (settingData?.data?.config?.custom_code) {
@@ -40,6 +43,32 @@ const MainApp: React.FC = () => {
       setIsCustomCodeInjected(true)
     }
   }, [settingData?.data?.config?.custom_code])
+
+  // 监听窗口大小变化
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+
+  // 根据主题和设备类型获取背景图片URL
+  const configBackgroundImage = useMemo(() => {
+    const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)
+    
+    // 选择桌面端或移动端背景
+    const bgUrl = isMobile && config.backgroundImageMobile ? config.backgroundImageMobile : config.backgroundImage
+    
+    if (!bgUrl) return ""
+    
+    // 处理亮色|暗色模式分隔
+    const urls = bgUrl.split("|").map((u) => u.trim())
+    if (urls.length > 1) {
+      return isDark ? urls[1] : urls[0]
+    }
+    return urls[0]
+  }, [theme, isMobile, config.backgroundImage, config.backgroundImageMobile])
 
   // 检测是否强制指定了主题颜色
   const forceTheme =
@@ -50,7 +79,7 @@ const MainApp: React.FC = () => {
     if (forceTheme === "dark" || forceTheme === "light") {
       setTheme(forceTheme)
     }
-  }, [forceTheme])
+  }, [forceTheme, setTheme])
 
   if (error) {
     return <ErrorPage code={500} message={error.message} />
@@ -69,27 +98,39 @@ const MainApp: React.FC = () => {
   }
 
   const customMobileBackgroundImage = window.CustomMobileBackgroundImage !== "" ? window.CustomMobileBackgroundImage : undefined
+  
+  // 合并customBackgroundImage和configBackgroundImage，优先使用customBackgroundImage
+  const finalBackgroundImage = customBackgroundImage || configBackgroundImage
+  
+  // 解析背景对齐方式
+  const [bgSize, bgPosition] = config.backgroundAlignment.split(",").map((s: string) => s.trim())
 
   return (
     <ErrorBoundary>
       {/* 固定定位的背景层 */}
-      {customBackgroundImage && (
+      {finalBackgroundImage && !isMobile && (
         <div
-          className={cn("fixed inset-0 z-0 bg-cover min-h-lvh bg-no-repeat bg-center dark:brightness-75", {
-            "hidden sm:block": customMobileBackgroundImage,
-          })}
-          style={{ backgroundImage: `url(${customBackgroundImage})` }}
+          className={cn("fixed inset-0 z-0 min-h-lvh bg-no-repeat dark:brightness-75")}
+          style={{ 
+            backgroundImage: `url(${finalBackgroundImage})`,
+            backgroundSize: bgSize || "cover",
+            backgroundPosition: bgPosition || "center"
+          }}
         />
       )}
-      {customMobileBackgroundImage && (
+      {(customMobileBackgroundImage || (configBackgroundImage && isMobile)) && (
         <div
-          className={cn("fixed inset-0 z-0 bg-cover min-h-lvh bg-no-repeat bg-center sm:hidden dark:brightness-75")}
-          style={{ backgroundImage: `url(${customMobileBackgroundImage})` }}
+          className={cn("fixed inset-0 z-0 min-h-lvh bg-no-repeat sm:hidden dark:brightness-75")}
+          style={{ 
+            backgroundImage: `url(${customMobileBackgroundImage || configBackgroundImage})`,
+            backgroundSize: bgSize || "cover",
+            backgroundPosition: bgPosition || "center"
+          }}
         />
       )}
       <div
         className={cn("flex min-h-screen w-full flex-col", {
-          "bg-background": !customBackgroundImage,
+          "bg-background": !finalBackgroundImage,
         })}
       >
         <main className="flex z-20 min-h-[calc(100vh-calc(var(--spacing)*16))] flex-1 flex-col gap-4 p-4 md:p-10 md:pt-8">
