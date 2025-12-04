@@ -34,7 +34,7 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
   return online ? (
     <section>
       <Card
-        className="flex items-center lg:flex-row justify-start gap-3 p-3 md:px-5 cursor-pointer hover:bg-accent/50 transition-colors min-w-[850px] w-full"
+        className="flex items-center lg:flex-row justify-start gap-3 p-3 md:px-5 cursor-pointer hover:bg-accent/50 transition-colors min-w-[900px] w-full"
         style={cardOpacityStyle}
         onClick={cardClick}
       >
@@ -49,8 +49,8 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
           </div>
         </section>
         <Separator orientation="vertical" className="h-8 mx-0 ml-2" />
-        <div className="flex flex-col gap-1">
-          <section className={cn("grid grid-cols-9 items-center gap-3 flex-1")}>
+        <div className="flex flex-col gap-2">
+          <section className={cn("grid grid-cols-9 items-center gap-2 flex-1")}>
             <div className={"items-center flex flex-row gap-2 whitespace-nowrap"}>
               <div className="text-xs font-semibold">
                 {platform.includes("Windows") ? (
@@ -87,23 +87,23 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
               <div className="flex items-center text-xs font-semibold">{stg.toFixed(2)}%</div>
               <ServerUsageBar value={stg} />
             </div>
-            <div className={"flex w-16 flex-col"}>
+            <div className={"flex w-20 flex-col"}>
               <p className="text-xs text-muted-foreground">{t("serverCard.upload")}</p>
               <div className="flex items-center text-xs font-semibold">
                 {up >= 1024 ? `${(up / 1024).toFixed(2)}G/s` : up >= 1 ? `${up.toFixed(2)}M/s` : `${(up * 1024).toFixed(2)}K/s`}
               </div>
             </div>
-            <div className={"flex w-16 flex-col"}>
+            <div className={"flex w-20 flex-col"}>
               <p className="text-xs text-muted-foreground">{t("serverCard.download")}</p>
               <div className="flex items-center text-xs font-semibold">
                 {down >= 1024 ? `${(down / 1024).toFixed(2)}G/s` : down >= 1 ? `${down.toFixed(2)}M/s` : `${(down * 1024).toFixed(2)}K/s`}
               </div>
             </div>
-            <div className={"flex w-12 flex-col"}>
+            <div className={"flex w-10 flex-col"}>
               <p className="text-xs text-muted-foreground">TCP</p>
               <div className="flex items-center text-xs font-semibold">{tcp}</div>
             </div>
-            <div className={"flex w-12 flex-col"}>
+            <div className={"flex w-10 flex-col"}>
               <p className="text-xs text-muted-foreground">UDP</p>
               <div className="flex items-center text-xs font-semibold">{udp}</div>
             </div>
@@ -114,7 +114,7 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
     </section>
   ) : (
     <Card
-      className="flex  min-h-[61px] min-w-[850px] items-center justify-start p-3 md:px-5 flex-row cursor-pointer hover:bg-accent/50 transition-colors"
+      className="flex  min-h-[61px] min-w-[900px] items-center justify-start p-3 md:px-5 flex-row cursor-pointer hover:bg-accent/50 transition-colors"
       style={cardOpacityStyle}
       onClick={cardClick}
     >

@@ -74,8 +74,8 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
       </div>
       <div className="flex flex-col lg:items-start items-center gap-2">
         <section
-          className={cn("grid grid-cols-7 items-center gap-3", {
-            "lg:grid-cols-8 lg:gap-4": fixedTopServerName,
+          className={cn("grid grid-cols-7 items-center gap-2", {
+            "lg:grid-cols-8 lg:gap-3": fixedTopServerName,
           })}
         >
           {fixedTopServerName && (
@@ -108,23 +108,23 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
             <div className="flex items-center text-xs font-semibold">{stg.toFixed(2)}%</div>
             <ServerUsageBar value={stg} />
           </div>
-          <div className={"flex w-14 flex-col"}>
+          <div className={"flex w-16 flex-col"}>
             <p className="text-xs text-muted-foreground">{t("serverCard.upload")}</p>
             <div className="flex items-center text-xs font-semibold">
               {up >= 1024 ? `${(up / 1024).toFixed(2)}G/s` : up >= 1 ? `${up.toFixed(2)}M/s` : `${(up * 1024).toFixed(2)}K/s`}
             </div>
           </div>
-          <div className={"flex w-14 flex-col"}>
+          <div className={"flex w-16 flex-col"}>
             <p className="text-xs text-muted-foreground">{t("serverCard.download")}</p>
             <div className="flex items-center text-xs font-semibold">
               {down >= 1024 ? `${(down / 1024).toFixed(2)}G/s` : down >= 1 ? `${down.toFixed(2)}M/s` : `${(down * 1024).toFixed(2)}K/s`}
             </div>
           </div>
-          <div className={"flex w-14 flex-col"}>
+          <div className={"flex w-10 flex-col"}>
             <p className="text-xs text-muted-foreground">TCP</p>
             <div className="flex items-center text-xs font-semibold">{tcp}</div>
           </div>
-          <div className={"flex w-14 flex-col"}>
+          <div className={"flex w-10 flex-col"}>
             <p className="text-xs text-muted-foreground">UDP</p>
             <div className="flex items-center text-xs font-semibold">{udp}</div>
           </div>
