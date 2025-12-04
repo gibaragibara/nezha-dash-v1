@@ -28,9 +28,11 @@ jobs:
         run: npm run build
 
       - name: Update theme configuration
-        env:
-          RELEASE_VERSION: ${{ github.event.release.tag_name }}
         run: |
+          # Get release version from GitHub event
+          RELEASE_VERSION="${{ github.event.release.tag_name }}"
+          echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV
+          
           # Get current date in YY.MM.DD format
           VERSION_DATE=$(date +"%y.%m.%d")
           # Get commit hash (short)
