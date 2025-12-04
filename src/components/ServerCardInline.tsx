@@ -1,6 +1,5 @@
 import ServerFlag from "@/components/ServerFlag"
 import ServerUsageBar from "@/components/ServerUsageBar"
-import { formatBytes } from "@/lib/format"
 import { GetFontLogoClass, GetOsName, MageMicrosoftWindows } from "@/lib/logo-class"
 import { cn, formatNezhaInfo, parsePublicNote } from "@/lib/utils"
 import { NezhaServer } from "@/types/nezha-api"
@@ -17,7 +16,7 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
   const { t } = useTranslation()
   const navigate = useNavigate()
   const cardOpacityStyle = useCardOpacity()
-  const { name, country_code, online, cpu, up, down, mem, stg, platform, uptime, net_in_transfer, net_out_transfer, public_note, tcp, udp } = formatNezhaInfo(
+  const { name, country_code, online, cpu, up, down, mem, stg, platform, uptime, public_note, tcp, udp } = formatNezhaInfo(
     now,
     serverInfo,
   )
@@ -35,7 +34,7 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
   return online ? (
     <section>
       <Card
-        className="flex items-center lg:flex-row justify-start gap-3 p-3 md:px-5 cursor-pointer hover:bg-accent/50 transition-colors min-w-[1000px] w-full"
+        className="flex items-center lg:flex-row justify-start gap-3 p-3 md:px-5 cursor-pointer hover:bg-accent/50 transition-colors min-w-[850px] w-full"
         style={cardOpacityStyle}
         onClick={cardClick}
       >
@@ -51,7 +50,7 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
         </section>
         <Separator orientation="vertical" className="h-8 mx-0 ml-2" />
         <div className="flex flex-col gap-1">
-          <section className={cn("grid grid-cols-11 items-center gap-3 flex-1")}>
+          <section className={cn("grid grid-cols-9 items-center gap-3 flex-1")}>
             <div className={"items-center flex flex-row gap-2 whitespace-nowrap"}>
               <div className="text-xs font-semibold">
                 {platform.includes("Windows") ? (
@@ -100,14 +99,6 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
                 {down >= 1024 ? `${(down / 1024).toFixed(2)}G/s` : down >= 1 ? `${down.toFixed(2)}M/s` : `${(down * 1024).toFixed(2)}K/s`}
               </div>
             </div>
-            <div className={"flex w-20 flex-col"}>
-              <p className="text-xs text-muted-foreground">{t("serverCard.totalUpload")}</p>
-              <div className="flex items-center text-xs font-semibold">{formatBytes(net_out_transfer)}</div>
-            </div>
-            <div className={"flex w-20 flex-col"}>
-              <p className="text-xs text-muted-foreground">{t("serverCard.totalDownload")}</p>
-              <div className="flex items-center text-xs font-semibold">{formatBytes(net_in_transfer)}</div>
-            </div>
             <div className={"flex w-12 flex-col"}>
               <p className="text-xs text-muted-foreground">TCP</p>
               <div className="flex items-center text-xs font-semibold">{tcp}</div>
@@ -123,7 +114,7 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
     </section>
   ) : (
     <Card
-      className="flex  min-h-[61px] min-w-[1000px] items-center justify-start p-3 md:px-5 flex-row cursor-pointer hover:bg-accent/50 transition-colors"
+      className="flex  min-h-[61px] min-w-[850px] items-center justify-start p-3 md:px-5 flex-row cursor-pointer hover:bg-accent/50 transition-colors"
       style={cardOpacityStyle}
       onClick={cardClick}
     >
