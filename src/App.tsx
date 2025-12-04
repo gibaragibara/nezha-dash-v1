@@ -60,13 +60,22 @@ const MainApp: React.FC = () => {
     // 选择桌面端或移动端背景
     const bgUrl = isMobile && config.backgroundImageMobile ? config.backgroundImageMobile : config.backgroundImage
     
+    console.log("=== 背景图片调试信息 ===")
+    console.log("isMobile:", isMobile)
+    console.log("config.backgroundImage:", config.backgroundImage)
+    console.log("config.backgroundImageMobile:", config.backgroundImageMobile)
+    console.log("选择的背景URL:", bgUrl)
+    
     if (!bgUrl) return ""
     
     // 处理亮色|暗色模式分隔
     const urls = bgUrl.split("|").map((u) => u.trim())
     if (urls.length > 1) {
-      return isDark ? urls[1] : urls[0]
+      const finalUrl = isDark ? urls[1] : urls[0]
+      console.log("isDark:", isDark, "最终URL:", finalUrl)
+      return finalUrl
     }
+    console.log("最终URL:", urls[0])
     return urls[0]
   }, [theme, isMobile, config.backgroundImage, config.backgroundImageMobile])
 
@@ -97,32 +106,27 @@ const MainApp: React.FC = () => {
     i18n.changeLanguage(settingData?.data?.config?.language)
   }
 
-  const customMobileBackgroundImage = window.CustomMobileBackgroundImage !== "" ? window.CustomMobileBackgroundImage : undefined
-  
-  // 合并customBackgroundImage和configBackgroundImage，优先使用customBackgroundImage
+  // 合并自定义背景和配置背景，优先使用自定义背景
   const finalBackgroundImage = customBackgroundImage || configBackgroundImage
   
+  console.log("customBackgroundImage:", customBackgroundImage)
+  console.log("configBackgroundImage:", configBackgroundImage)
+  console.log("最终背景图片URL:", finalBackgroundImage)
+  console.log("isMobile:", isMobile)
+  
   // 解析背景对齐方式
-  const [bgSize, bgPosition] = config.backgroundAlignment.split(",").map((s: string) => s.trim())
+  const backgroundAlignment = config.backgroundAlignment || "cover,center"
+  const [bgSize, bgPosition] = backgroundAlignment.split(",").map((s: string) => s.trim())
+  console.log("背景对齐:", bgSize, bgPosition)
 
   return (
     <ErrorBoundary>
       {/* 固定定位的背景层 */}
-      {finalBackgroundImage && !isMobile && (
+      {finalBackgroundImage && (
         <div
           className={cn("fixed inset-0 z-0 min-h-lvh bg-no-repeat dark:brightness-75")}
           style={{ 
             backgroundImage: `url(${finalBackgroundImage})`,
-            backgroundSize: bgSize || "cover",
-            backgroundPosition: bgPosition || "center"
-          }}
-        />
-      )}
-      {(customMobileBackgroundImage || (configBackgroundImage && isMobile)) && (
-        <div
-          className={cn("fixed inset-0 z-0 min-h-lvh bg-no-repeat sm:hidden dark:brightness-75")}
-          style={{ 
-            backgroundImage: `url(${customMobileBackgroundImage || configBackgroundImage})`,
             backgroundSize: bgSize || "cover",
             backgroundPosition: bgPosition || "center"
           }}
