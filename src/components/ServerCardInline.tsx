@@ -16,7 +16,7 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
   const { t } = useTranslation()
   const navigate = useNavigate()
   const cardOpacityStyle = useCardOpacity()
-  const { name, country_code, online, cpu, up, down, mem, stg, platform, uptime, public_note, tcp, udp } = formatNezhaInfo(
+  const { name, country_code, online, cpu, up, down, mem, stg, platform, uptime, public_note, tcp, udp, tag } = formatNezhaInfo(
     now,
     serverInfo,
   )
@@ -108,6 +108,11 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
               <div className="flex items-center justify-center text-xs font-semibold">{udp}</div>
             </div>
           </section>
+          {tag && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <span className="opacity-70">{tag}</span>
+            </div>
+          )}
           {parsedData?.planDataMod && <PlanInfo parsedData={parsedData} />}
         </div>
       </Card>
@@ -129,6 +134,11 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
         </div>
       </section>
       <Separator orientation="vertical" className="h-8 ml-3 lg:ml-1 mr-3" />
+      {tag && (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground mr-2">
+          <span className="opacity-70">{tag}</span>
+        </div>
+      )}
       {parsedData?.planDataMod && <PlanInfo parsedData={parsedData} />}
     </Card>
   )

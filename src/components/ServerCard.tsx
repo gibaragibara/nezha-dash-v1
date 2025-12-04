@@ -14,7 +14,7 @@ import { Card } from "./ui/card"
 export default function ServerCard({ now, serverInfo }: { now: number; serverInfo: NezhaServer }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { name, country_code, online, cpu, up, down, mem, stg, public_note, platform, tcp, udp } = formatNezhaInfo(
+  const { name, country_code, online, cpu, up, down, mem, stg, public_note, platform, tcp, udp, tag } = formatNezhaInfo(
     now,
     serverInfo,
   )
@@ -125,6 +125,11 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
             <div className="flex items-center justify-center text-xs font-semibold">{udp}</div>
           </div>
         </section>
+        {tag && (
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <span className="opacity-70">{tag}</span>
+          </div>
+        )}
         {parsedData?.planDataMod && <PlanInfo parsedData={parsedData} />}
       </div>
     </Card>
@@ -169,6 +174,11 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
       >
         {parsedData?.billingDataMod && <BillingInfo parsedData={parsedData} />}
       </div>
+      {tag && (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <span className="opacity-70">{tag}</span>
+        </div>
+      )}
       {parsedData?.planDataMod && <PlanInfo parsedData={parsedData} />}
     </Card>
   )
