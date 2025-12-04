@@ -1,0 +1,27 @@
+name: PR Build Check
+
+# 触发条件：只有在提 Pull Request 到 main 分支时触发
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  check-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # 关键步骤：尝试打包
+      # 如果这里报错（比如语法错误），流程就会失败，PR 页面会显示红叉 ❌
+      - name: Try Build
+        run: npm run build
