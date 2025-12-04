@@ -77,12 +77,12 @@ const calculatePacketLoss = (delays: number[]): number[] => {
   return packetLossRates.map((rate) => Number(rate.toFixed(2)))
 }
 
-export function NetworkChart({ server_id, show }: { server_id: number; show: boolean }) {
+export function NetworkChart({ server_id, show, hours = 24 }: { server_id: number; show: boolean; hours?: number }) {
   const { t } = useTranslation()
 
   const { data: monitorData } = useQuery({
-    queryKey: ["monitor", server_id],
-    queryFn: () => fetchMonitor(server_id),
+    queryKey: ["monitor", server_id, hours],
+    queryFn: () => fetchMonitor(server_id, hours),
     enabled: show,
     refetchOnMount: true,
     refetchOnWindowFocus: true,

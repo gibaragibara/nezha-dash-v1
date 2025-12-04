@@ -57,7 +57,7 @@ export const fetchLoginUser = async (): Promise<LoginUserResponse> => {
   return data
 }
 // TODO
-export const fetchMonitor = async (server_id: number): Promise<MonitorResponse> => {
+export const fetchMonitor = async (server_id: number, hours: number = 24): Promise<MonitorResponse> => {
   // 获取 uuid 和服务器名称
   const km_nodes: Record<string, any> = await getKomariNodes()
   if (km_nodes?.error) {
@@ -73,7 +73,7 @@ export const fetchMonitor = async (server_id: number): Promise<MonitorResponse> 
     type: "ping",
     uuid: uuid,
     maxCount: 2000,
-    hours: 24,
+    hours: hours,
   })
 
   // 将 km_monitors 转换为 NezhaMonitor[]

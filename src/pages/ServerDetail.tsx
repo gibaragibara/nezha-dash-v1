@@ -19,13 +19,25 @@ export default function ServerDetail() {
   const tabs = ["Detail", "Network"]
   const [currentTab, setCurrentTab] = useState(tabs[0])
   const [loadHours, setLoadHours] = useState<number>(0) // 默认实时
+  const [pingHours, setPingHours] = useState<number>(24) // 网络延迟默认24小时
 
   const { id: server_id } = useParams()
 
-  // 时间范围选项
-  const timeRanges = useMemo(
+  // 负载图表时间范围选项
+  const loadTimeRanges = useMemo(
     () => [
       { label: t("timeRange.live", "实时"), hours: 0 },
+      { label: t("timeRange.1hour", "1小时"), hours: 1 },
+      { label: t("timeRange.4hours", "4小时"), hours: 4 },
+      { label: t("timeRange.1day", "1天"), hours: 24 },
+      { label: t("timeRange.7days", "7天"), hours: 168 },
+    ],
+    [t],
+  )
+
+  // 网络延迟时间范围选项（无实时选项）
+  const pingTimeRanges = useMemo(
+    () => [
       { label: t("timeRange.1hour", "1小时"), hours: 1 },
       { label: t("timeRange.4hours", "4小时"), hours: 4 },
       { label: t("timeRange.1day", "1天"), hours: 24 },
@@ -50,15 +62,19 @@ export default function ServerDetail() {
         <Separator className="flex-1" />
       </section>
       <div style={{ display: currentTab === tabs[0] ? "block" : "none" }}>
-        {/* 时间范围选择器 */}
+        {/* 负载图表时间范围选择器 */}
         <div className="flex justify-center mb-4">
-          <TimeRangeSelector currentHours={loadHours} onTimeRangeChange={setLoadHours} timeRanges={timeRanges} />
+          <TimeRangeSelector currentHours={loadHours} onTimeRangeChange={setLoadHours} timeRanges={loadTimeRanges} />
         </div>
         {/* 图表区域 */}
         <ServerHistoryChart server_id={server_id} hours={loadHours} />
       </div>
       <div style={{ display: currentTab === tabs[1] ? "block" : "none" }}>
-        <NetworkChart server_id={Number(server_id)} show={currentTab === tabs[1]} />
+        {/* 网络延迟时间范围选择器 */}
+        <div className="flex justify-center mb-4">
+          <TimeRangeSelector currentHours={pingHours} onTimeRangeChange={setPingHours} timeRanges={pingTimeRanges} />
+        </div>
+        <NetworkChart server_id={Number(server_id)} show={currentTab === tabs[1]} hours={pingHours} />
       </div>
     </div>
   )
