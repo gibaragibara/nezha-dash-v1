@@ -121,13 +121,14 @@ export default function ServerHistoryChart({ server_id, hours }: ServerHistoryCh
 
 // ============= 历史模式图表组件 =============
 
+// 将 chartConfig 移到组件外部,避免每次渲染都创建新对象
+const cpuChartConfig = {
+    cpu: { label: "CPU" },
+} satisfies ChartConfig
+
 function HistoryCpuChart({ data }: { data: ChartDataPoint[] }) {
     const cardOpacityStyle = useCardOpacity()
     const latestCpu = data.length > 0 ? data[data.length - 1].cpu || 0 : 0
-
-    const chartConfig = {
-        cpu: { label: "CPU" },
-    } satisfies ChartConfig
 
     return (
         <Card style={cardOpacityStyle}>
@@ -140,7 +141,7 @@ function HistoryCpuChart({ data }: { data: ChartDataPoint[] }) {
                             <AnimatedCircularProgressBar className="size-3 text-[0px]" max={100} min={0} value={latestCpu} primaryColor="hsl(var(--chart-1))" />
                         </section>
                     </div>
-                    <ChartContainer config={chartConfig} className="aspect-auto h-[130px] w-full">
+                    <ChartContainer config={cpuChartConfig} className="aspect-auto h-[130px] w-full">
                         <AreaChart data={data} margin={{ top: 12, left: 12, right: 12 }}>
                             <CartesianGrid vertical={false} />
                             <XAxis
@@ -175,14 +176,14 @@ function HistoryCpuChart({ data }: { data: ChartDataPoint[] }) {
     )
 }
 
+const processChartConfig = {
+    process: { label: "Process" },
+} satisfies ChartConfig
+
 function HistoryProcessChart({ data }: { data: ChartDataPoint[] }) {
     const { t } = useTranslation()
     const cardOpacityStyle = useCardOpacity()
     const latestProcess = data.length > 0 ? data[data.length - 1].process || 0 : 0
-
-    const chartConfig = {
-        process: { label: "Process" },
-    } satisfies ChartConfig
 
     return (
         <Card style={cardOpacityStyle}>
@@ -194,7 +195,7 @@ function HistoryProcessChart({ data }: { data: ChartDataPoint[] }) {
                             <p className="text-xs text-end w-10 font-medium">{latestProcess}</p>
                         </section>
                     </div>
-                    <ChartContainer config={chartConfig} className="aspect-auto h-[130px] w-full">
+                    <ChartContainer config={processChartConfig} className="aspect-auto h-[130px] w-full">
                         <AreaChart data={data} margin={{ top: 12, left: 12, right: 12 }}>
                             <CartesianGrid vertical={false} />
                             <XAxis
@@ -229,15 +230,15 @@ function HistoryProcessChart({ data }: { data: ChartDataPoint[] }) {
     )
 }
 
+const diskChartConfig = {
+    disk: { label: "Disk" },
+} satisfies ChartConfig
+
 function HistoryDiskChart({ data }: { data: any[] }) {
     const { t } = useTranslation()
     const cardOpacityStyle = useCardOpacity()
     const latest = data.length > 0 ? data[data.length - 1] : null
     const latestDisk = latest?.disk || 0
-
-    const chartConfig = {
-        disk: { label: "Disk" },
-    } satisfies ChartConfig
 
     return (
         <Card style={cardOpacityStyle}>
@@ -257,7 +258,7 @@ function HistoryDiskChart({ data }: { data: any[] }) {
                             )}
                         </section>
                     </div>
-                    <ChartContainer config={chartConfig} className="aspect-auto h-[130px] w-full">
+                    <ChartContainer config={diskChartConfig} className="aspect-auto h-[130px] w-full">
                         <AreaChart data={data} margin={{ top: 12, left: 12, right: 12 }}>
                             <CartesianGrid vertical={false} />
                             <XAxis
@@ -295,17 +296,17 @@ function HistoryDiskChart({ data }: { data: any[] }) {
     )
 }
 
+const memChartConfig = {
+    mem: { label: "Mem" },
+    swap: { label: "Swap" },
+} satisfies ChartConfig
+
 function HistoryMemChart({ data }: { data: any[] }) {
     const { t } = useTranslation()
     const cardOpacityStyle = useCardOpacity()
     const latest = data.length > 0 ? data[data.length - 1] : null
     const latestMem = latest?.mem || 0
     const latestSwap = latest?.swap || 0
-
-    const chartConfig = {
-        mem: { label: "Mem" },
-        swap: { label: "Swap" },
-    } satisfies ChartConfig
 
     return (
         <Card style={cardOpacityStyle}>
@@ -343,7 +344,7 @@ function HistoryMemChart({ data }: { data: any[] }) {
                             </section>
                         )}
                     </div>
-                    <ChartContainer config={chartConfig} className="aspect-auto h-[130px] w-full">
+                    <ChartContainer config={memChartConfig} className="aspect-auto h-[130px] w-full">
                         <AreaChart data={data} margin={{ top: 12, left: 12, right: 12 }}>
                             <CartesianGrid vertical={false} />
                             <XAxis
@@ -385,23 +386,24 @@ function HistoryMemChart({ data }: { data: any[] }) {
     )
 }
 
+const networkChartConfig = {
+    upload: { label: "Upload" },
+    download: { label: "Download" },
+} satisfies ChartConfig
+
+// 缓存 formatSpeed 函数
+const formatSpeed = (value: number) => {
+    if (value >= 1024) return `${(value / 1024).toFixed(2)}G/s`
+    if (value >= 1) return `${value.toFixed(2)}M/s`
+    return `${(value * 1024).toFixed(2)}K/s`
+}
+
 function HistoryNetworkChart({ data }: { data: ChartDataPoint[] }) {
     const { t } = useTranslation()
     const cardOpacityStyle = useCardOpacity()
     const latest = data.length > 0 ? data[data.length - 1] : null
     const up = latest?.upload || 0
     const down = latest?.download || 0
-
-    const chartConfig = {
-        upload: { label: "Upload" },
-        download: { label: "Download" },
-    } satisfies ChartConfig
-
-    const formatSpeed = (value: number) => {
-        if (value >= 1024) return `${(value / 1024).toFixed(2)}G/s`
-        if (value >= 1) return `${value.toFixed(2)}M/s`
-        return `${(value * 1024).toFixed(2)}K/s`
-    }
 
     return (
         <Card style={cardOpacityStyle}>
@@ -425,7 +427,7 @@ function HistoryNetworkChart({ data }: { data: ChartDataPoint[] }) {
                             </div>
                         </section>
                     </div>
-                    <ChartContainer config={chartConfig} className="aspect-auto h-[130px] w-full">
+                    <ChartContainer config={networkChartConfig} className="aspect-auto h-[130px] w-full">
                         <LineChart data={data} margin={{ top: 12, left: 12, right: 12 }}>
                             <CartesianGrid vertical={false} />
                             <XAxis
@@ -462,16 +464,16 @@ function HistoryNetworkChart({ data }: { data: ChartDataPoint[] }) {
     )
 }
 
+const connectChartConfig = {
+    tcp: { label: "TCP" },
+    udp: { label: "UDP" },
+} satisfies ChartConfig
+
 function HistoryConnectChart({ data }: { data: ChartDataPoint[] }) {
     const cardOpacityStyle = useCardOpacity()
     const latest = data.length > 0 ? data[data.length - 1] : null
     const tcp = latest?.tcp || 0
     const udp = latest?.udp || 0
-
-    const chartConfig = {
-        tcp: { label: "TCP" },
-        udp: { label: "UDP" },
-    } satisfies ChartConfig
 
     return (
         <Card style={cardOpacityStyle}>
@@ -495,7 +497,7 @@ function HistoryConnectChart({ data }: { data: ChartDataPoint[] }) {
                             </div>
                         </section>
                     </div>
-                    <ChartContainer config={chartConfig} className="aspect-auto h-[130px] w-full">
+                    <ChartContainer config={connectChartConfig} className="aspect-auto h-[130px] w-full">
                         <LineChart data={data} margin={{ top: 12, left: 12, right: 12 }}>
                             <CartesianGrid vertical={false} />
                             <XAxis
@@ -540,6 +542,8 @@ type cpuChartData = {
     cpu: number
 }
 
+const realtimeCpuChartConfig = { cpu: { label: "CPU" } } satisfies ChartConfig
+
 function CpuChartRealtime({ now, data, messageHistory }: { now: number; data: NezhaServer; messageHistory: { data: string }[] }) {
     const [cpuChartData, setCpuChartData] = useState<cpuChartData[]>([])
     const hasInitialized = useRef(false)
@@ -565,7 +569,7 @@ function CpuChartRealtime({ now, data, messageHistory }: { now: number; data: Ne
             hasInitialized.current = true
             setHistoryLoaded(true)
         }
-    }, [messageHistory])
+    }, [messageHistory, data.id])
 
     useEffect(() => {
         if (data && historyLoaded) {
@@ -586,9 +590,7 @@ function CpuChartRealtime({ now, data, messageHistory }: { now: number; data: Ne
                 return newData
             })
         }
-    }, [data, historyLoaded])
-
-    const chartConfig = { cpu: { label: "CPU" } } satisfies ChartConfig
+    }, [data, historyLoaded, cpu])
 
     return (
         <Card style={cardOpacityStyle}>
@@ -601,7 +603,7 @@ function CpuChartRealtime({ now, data, messageHistory }: { now: number; data: Ne
                             <AnimatedCircularProgressBar className="size-3 text-[0px]" max={100} min={0} value={cpu} primaryColor="hsl(var(--chart-1))" />
                         </section>
                     </div>
-                    <ChartContainer config={chartConfig} className="aspect-auto h-[130px] w-full">
+                    <ChartContainer config={realtimeCpuChartConfig} className="aspect-auto h-[130px] w-full">
                         <AreaChart data={cpuChartData} margin={{ top: 12, left: 12, right: 12 }}>
                             <CartesianGrid vertical={false} />
                             <XAxis
@@ -624,6 +626,8 @@ function CpuChartRealtime({ now, data, messageHistory }: { now: number; data: Ne
 }
 
 // 简化的实时图表组件 - 复用 ServerDetailChart 的逻辑
+const realtimeProcessChartConfig = { process: { label: "Process" } } satisfies ChartConfig
+
 function ProcessChartRealtime({ now, data, messageHistory }: { now: number; data: NezhaServer; messageHistory: { data: string }[] }) {
     const { t } = useTranslation()
     const [chartData, setChartData] = useState<{ timeStamp: string; process: number }[]>([])
@@ -648,7 +652,7 @@ function ProcessChartRealtime({ now, data, messageHistory }: { now: number; data
             hasInitialized.current = true
             setHistoryLoaded(true)
         }
-    }, [messageHistory])
+    }, [messageHistory, data.id])
 
     useEffect(() => {
         if (data && historyLoaded) {
@@ -661,9 +665,7 @@ function ProcessChartRealtime({ now, data, messageHistory }: { now: number; data
                 return newData.length > 30 ? newData.slice(1) : newData
             })
         }
-    }, [data, historyLoaded])
-
-    const chartConfig = { process: { label: "Process" } } satisfies ChartConfig
+    }, [data, historyLoaded, process])
 
     return (
         <Card style={cardOpacityStyle}>
@@ -673,7 +675,7 @@ function ProcessChartRealtime({ now, data, messageHistory }: { now: number; data
                         <p className="text-md font-medium">{t("serverDetailChart.process")}</p>
                         <p className="text-xs font-medium">{process}</p>
                     </div>
-                    <ChartContainer config={chartConfig} className="aspect-auto h-[130px] w-full">
+                    <ChartContainer config={realtimeProcessChartConfig} className="aspect-auto h-[130px] w-full">
                         <AreaChart data={chartData} margin={{ top: 12, left: 12, right: 12 }}>
                             <CartesianGrid vertical={false} />
                             <XAxis dataKey="timeStamp" tickLine={false} axisLine={false} tickMargin={8} minTickGap={200} interval="preserveStartEnd" tickFormatter={(value) => formatRelativeTime(value)} />
@@ -686,6 +688,8 @@ function ProcessChartRealtime({ now, data, messageHistory }: { now: number; data
         </Card>
     )
 }
+
+const realtimeDiskChartConfig = { disk: { label: "Disk" } } satisfies ChartConfig
 
 function DiskChartRealtime({ now, data, messageHistory }: { now: number; data: NezhaServer; messageHistory: { data: string }[] }) {
     const { t } = useTranslation()
@@ -711,7 +715,7 @@ function DiskChartRealtime({ now, data, messageHistory }: { now: number; data: N
             hasInitialized.current = true
             setHistoryLoaded(true)
         }
-    }, [messageHistory])
+    }, [messageHistory, data.id])
 
     useEffect(() => {
         if (data && historyLoaded) {
@@ -724,9 +728,7 @@ function DiskChartRealtime({ now, data, messageHistory }: { now: number; data: N
                 return newData.length > 30 ? newData.slice(1) : newData
             })
         }
-    }, [data, historyLoaded])
-
-    const chartConfig = { disk: { label: "Disk" } } satisfies ChartConfig
+    }, [data, historyLoaded, disk])
 
     return (
         <Card style={cardOpacityStyle}>
@@ -744,7 +746,7 @@ function DiskChartRealtime({ now, data, messageHistory }: { now: number; data: N
                             </div>
                         </section>
                     </div>
-                    <ChartContainer config={chartConfig} className="aspect-auto h-[130px] w-full">
+                    <ChartContainer config={realtimeDiskChartConfig} className="aspect-auto h-[130px] w-full">
                         <AreaChart data={chartData} margin={{ top: 12, left: 12, right: 12 }}>
                             <CartesianGrid vertical={false} />
                             <XAxis dataKey="timeStamp" tickLine={false} axisLine={false} tickMargin={8} minTickGap={200} interval="preserveStartEnd" tickFormatter={(value) => formatRelativeTime(value)} />
@@ -757,6 +759,8 @@ function DiskChartRealtime({ now, data, messageHistory }: { now: number; data: N
         </Card>
     )
 }
+
+const realtimeMemChartConfig = { mem: { label: "Mem" }, swap: { label: "Swap" } } satisfies ChartConfig
 
 function MemChartRealtime({ now, data, messageHistory }: { now: number; data: NezhaServer; messageHistory: { data: string }[] }) {
     const { t } = useTranslation()
@@ -782,7 +786,7 @@ function MemChartRealtime({ now, data, messageHistory }: { now: number; data: Ne
             hasInitialized.current = true
             setHistoryLoaded(true)
         }
-    }, [messageHistory])
+    }, [messageHistory, data.id])
 
     useEffect(() => {
         if (data && historyLoaded) {
@@ -795,9 +799,7 @@ function MemChartRealtime({ now, data, messageHistory }: { now: number; data: Ne
                 return newData.length > 30 ? newData.slice(1) : newData
             })
         }
-    }, [data, historyLoaded])
-
-    const chartConfig = { mem: { label: "Mem" }, swap: { label: "Swap" } } satisfies ChartConfig
+    }, [data, historyLoaded, mem, swap])
 
     return (
         <Card style={cardOpacityStyle}>
@@ -829,7 +831,7 @@ function MemChartRealtime({ now, data, messageHistory }: { now: number; data: Ne
                             </div>
                         </section>
                     </div>
-                    <ChartContainer config={chartConfig} className="aspect-auto h-[130px] w-full">
+                    <ChartContainer config={realtimeMemChartConfig} className="aspect-auto h-[130px] w-full">
                         <AreaChart data={chartData} margin={{ top: 12, left: 12, right: 12 }}>
                             <CartesianGrid vertical={false} />
                             <XAxis dataKey="timeStamp" tickLine={false} axisLine={false} tickMargin={8} minTickGap={200} interval="preserveStartEnd" tickFormatter={(value) => formatRelativeTime(value)} />
@@ -843,6 +845,8 @@ function MemChartRealtime({ now, data, messageHistory }: { now: number; data: Ne
         </Card>
     )
 }
+
+const realtimeNetworkChartConfig = { upload: { label: "Upload" }, download: { label: "Download" } } satisfies ChartConfig
 
 function NetworkChartRealtime({ now, data, messageHistory }: { now: number; data: NezhaServer; messageHistory: { data: string }[] }) {
     const { t } = useTranslation()
@@ -868,7 +872,7 @@ function NetworkChartRealtime({ now, data, messageHistory }: { now: number; data
             hasInitialized.current = true
             setHistoryLoaded(true)
         }
-    }, [messageHistory])
+    }, [messageHistory, data.id])
 
     useEffect(() => {
         if (data && historyLoaded) {
@@ -881,15 +885,7 @@ function NetworkChartRealtime({ now, data, messageHistory }: { now: number; data
                 return newData.length > 30 ? newData.slice(1) : newData
             })
         }
-    }, [data, historyLoaded])
-
-    const chartConfig = { upload: { label: "Upload" }, download: { label: "Download" } } satisfies ChartConfig
-
-    const formatSpeed = (value: number) => {
-        if (value >= 1024) return `${(value / 1024).toFixed(2)}G/s`
-        if (value >= 1) return `${value.toFixed(2)}M/s`
-        return `${(value * 1024).toFixed(2)}K/s`
-    }
+    }, [data, historyLoaded, up, down])
 
     return (
         <Card style={cardOpacityStyle}>
@@ -913,7 +909,7 @@ function NetworkChartRealtime({ now, data, messageHistory }: { now: number; data
                             </div>
                         </section>
                     </div>
-                    <ChartContainer config={chartConfig} className="aspect-auto h-[130px] w-full">
+                    <ChartContainer config={realtimeNetworkChartConfig} className="aspect-auto h-[130px] w-full">
                         <LineChart data={chartData} margin={{ top: 12, left: 12, right: 12 }}>
                             <CartesianGrid vertical={false} />
                             <XAxis dataKey="timeStamp" tickLine={false} axisLine={false} tickMargin={8} minTickGap={200} interval="preserveStartEnd" tickFormatter={(value) => formatRelativeTime(value)} />
@@ -927,6 +923,8 @@ function NetworkChartRealtime({ now, data, messageHistory }: { now: number; data
         </Card>
     )
 }
+
+const realtimeConnectChartConfig = { tcp: { label: "TCP" }, udp: { label: "UDP" } } satisfies ChartConfig
 
 function ConnectChartRealtime({ now, data, messageHistory }: { now: number; data: NezhaServer; messageHistory: { data: string }[] }) {
     const [chartData, setChartData] = useState<{ timeStamp: string; tcp: number; udp: number }[]>([])
@@ -951,7 +949,7 @@ function ConnectChartRealtime({ now, data, messageHistory }: { now: number; data
             hasInitialized.current = true
             setHistoryLoaded(true)
         }
-    }, [messageHistory])
+    }, [messageHistory, data.id])
 
     useEffect(() => {
         if (data && historyLoaded) {
@@ -964,9 +962,7 @@ function ConnectChartRealtime({ now, data, messageHistory }: { now: number; data
                 return newData.length > 30 ? newData.slice(1) : newData
             })
         }
-    }, [data, historyLoaded])
-
-    const chartConfig = { tcp: { label: "TCP" }, udp: { label: "UDP" } } satisfies ChartConfig
+    }, [data, historyLoaded, tcp, udp])
 
     return (
         <Card style={cardOpacityStyle}>
@@ -990,7 +986,7 @@ function ConnectChartRealtime({ now, data, messageHistory }: { now: number; data
                             </div>
                         </section>
                     </div>
-                    <ChartContainer config={chartConfig} className="aspect-auto h-[130px] w-full">
+                    <ChartContainer config={realtimeConnectChartConfig} className="aspect-auto h-[130px] w-full">
                         <LineChart data={chartData} margin={{ top: 12, left: 12, right: 12 }}>
                             <CartesianGrid vertical={false} />
                             <XAxis dataKey="timeStamp" tickLine={false} axisLine={false} tickMargin={8} minTickGap={200} interval="preserveStartEnd" tickFormatter={(value) => formatRelativeTime(value)} />
