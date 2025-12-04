@@ -29,9 +29,6 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
   const showFlag = true
   const cardOpacityStyle = useCardOpacity()
 
-  // @ts-expect-error ShowNetTransfer is a global variable
-  const showNetTransfer = window.ShowNetTransfer as boolean
-
   // @ts-expect-error FixedTopServerName is a global variable
   const fixedTopServerName = window.FixedTopServerName as boolean
 
@@ -126,38 +123,36 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
             </div>
           </div>
         </section>
-        {showNetTransfer && (
-          <section className={"flex flex-col w-full gap-1"}>
-            <div className="flex items-center justify-between gap-1">
-              <Badge
-                variant="secondary"
-                className="items-center flex-1 justify-center rounded-[8px] text-nowrap text-[11px] border-muted-50 shadow-md shadow-neutral-200/30 dark:shadow-none"
-              >
-                {t("serverCard.upload")}:{formatBytes(net_out_transfer)}
-              </Badge>
-              <Badge
-                variant="outline"
-                className="items-center flex-1 justify-center rounded-[8px] text-nowrap text-[11px] shadow-md shadow-neutral-200/30 dark:shadow-none"
-              >
-                {t("serverCard.download")}:{formatBytes(net_in_transfer)}
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between gap-1">
-              <Badge
-                variant="secondary"
-                className="items-center flex-1 justify-center rounded-[8px] text-nowrap text-[11px] border-muted-50 shadow-md shadow-neutral-200/30 dark:shadow-none"
-              >
-                TCP:{tcp}
-              </Badge>
-              <Badge
-                variant="outline"
-                className="items-center flex-1 justify-center rounded-[8px] text-nowrap text-[11px] shadow-md shadow-neutral-200/30 dark:shadow-none"
-              >
-                UDP:{udp}
-              </Badge>
-            </div>
-          </section>
-        )}
+        {/* 总流量统计 */}
+        <section className={"flex items-center w-full justify-between gap-1"}>
+          <Badge
+            variant="secondary"
+            className="items-center flex-1 justify-center rounded-[8px] text-nowrap text-[11px] border-muted-50 shadow-md shadow-neutral-200/30 dark:shadow-none"
+          >
+            ↑{formatBytes(net_out_transfer)}
+          </Badge>
+          <Badge
+            variant="outline"
+            className="items-center flex-1 justify-center rounded-[8px] text-nowrap text-[11px] shadow-md shadow-neutral-200/30 dark:shadow-none"
+          >
+            ↓{formatBytes(net_in_transfer)}
+          </Badge>
+        </section>
+        {/* TCP/UDP 连接数 */}
+        <section className={"flex items-center w-full justify-between gap-1"}>
+          <Badge
+            variant="secondary"
+            className="items-center flex-1 justify-center rounded-[8px] text-nowrap text-[11px] border-muted-50 shadow-md shadow-neutral-200/30 dark:shadow-none"
+          >
+            TCP:{tcp}
+          </Badge>
+          <Badge
+            variant="outline"
+            className="items-center flex-1 justify-center rounded-[8px] text-nowrap text-[11px] shadow-md shadow-neutral-200/30 dark:shadow-none"
+          >
+            UDP:{udp}
+          </Badge>
+        </section>
         {parsedData?.planDataMod && <PlanInfo parsedData={parsedData} />}
       </div>
     </Card>
@@ -165,7 +160,7 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
     <Card
       className={cn(
         "flex flex-col items-center justify-start gap-3 sm:gap-0 p-3 md:px-5 cursor-pointer hover:bg-accent/50 transition-colors",
-        showNetTransfer ? "lg:min-h-[115px] min-h-[160px]" : "lg:min-h-[61px] min-h-[93px]",
+        "lg:min-h-[115px] min-h-[145px]",
         {
           "flex-col": fixedTopServerName,
           "lg:flex-row": !fixedTopServerName,
