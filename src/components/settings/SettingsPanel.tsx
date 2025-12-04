@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
-import { DEFAULT_CONFIG } from "@/config/default"
-import { ConfigOptions, useAppConfig } from "@/contexts/ConfigContext"
+import { DEFAULT_CONFIG, ConfigOptions } from "@/config/default"
+import { useAppConfig } from "@/config/hooks"
 import SettingItem from "./SettingItem"
 import themeConfig from "../../../komari-theme.json"
 
@@ -39,7 +39,7 @@ const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
   }, [editingConfig, config])
 
   const handleConfigChange = (key: keyof ConfigOptions, value: any) => {
-    setEditingConfig((prev) => ({ ...prev, [key]: value }))
+    setEditingConfig((prev: Partial<ConfigOptions>) => ({ ...prev, [key]: value }))
   }
 
   const handleSave = () => {
