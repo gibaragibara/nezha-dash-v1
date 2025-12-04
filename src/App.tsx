@@ -81,6 +81,18 @@ const MainApp: React.FC = () => {
     }
   }, [forceTheme, setTheme])
 
+  // 同步配置中的背景图片到 window 对象
+  useEffect(() => {
+    console.log("=== App Background Sync ===")
+    console.log("configBackgroundImage:", configBackgroundImage)
+    console.log("customBackgroundImage:", customBackgroundImage)
+    console.log("config:", config)
+    if (configBackgroundImage && !customBackgroundImage) {
+      window.CustomBackgroundImage = configBackgroundImage
+      console.log("Set window.CustomBackgroundImage to:", configBackgroundImage)
+    }
+  }, [configBackgroundImage, customBackgroundImage, config])
+
   if (error) {
     return <ErrorPage code={500} message={error.message} />
   }
