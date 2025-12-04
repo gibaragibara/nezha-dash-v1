@@ -1,16 +1,15 @@
 import { useEffect, useState } from "react"
 import { X } from "lucide-react"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import type { ConfigOptions } from "@/config/default"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 import { DEFAULT_CONFIG } from "@/config/default"
-import { useAppConfig } from "@/config/hooks"
-import { cn } from "@/lib/utils"
-
+import { ConfigOptions, useAppConfig } from "@/contexts/ConfigContext"
 import SettingItem from "./SettingItem"
+import themeConfig from "../../../komari-theme.json"
 
 interface SettingsPanelProps {
   isOpen: boolean
@@ -25,34 +24,9 @@ const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
 
   // 加载komari-theme.json配置
   useEffect(() => {
-    const fetchSettingsConfig = async () => {
-      try {
-        const response = await fetch("/komari-theme.json")
-        
-        // 检查响应是否成功
-        if (!response.ok) {
-          console.warn("Settings config file not found, using defaults")
-          return
-        }
-        
-        // 检查 Content-Type 是否为 JSON
-        const contentType = response.headers.get("content-type")
-        if (!contentType || !contentType.includes("application/json")) {
-          console.warn("Settings config is not JSON, skipping")
-          return
-        }
-        
-        const data = await response.json()
-        if (data.configuration?.data) {
-          setSettingsConfig(data.configuration.data)
-        }
-      } catch (error) {
-        // 静默处理错误，使用默认配置
-        console.debug("Settings config not available:", error)
-      }
+    if (themeConfig?.configuration?.data) {
+      setSettingsConfig(themeConfig.configuration.data)
     }
-
-    fetchSettingsConfig()
   }, [])
 
   useEffect(() => {
@@ -108,7 +82,7 @@ const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
           const sanitizedConfig: Partial<ConfigOptions> = {}
           for (const key in DEFAULT_CONFIG) {
             if (Object.prototype.hasOwnProperty.call(importedConfig, key)) {
-              ;(sanitizedConfig as any)[key] = (importedConfig as any)[key]
+              ; (sanitizedConfig as any)[key] = (importedConfig as any)[key]
             }
           }
           setEditingConfig(sanitizedConfig)

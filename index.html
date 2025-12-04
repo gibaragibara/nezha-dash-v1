@@ -1,137 +1,141 @@
 <!doctype html>
 <html>
-  <head>
-    <script>
-      // 在页面渲染前就执行主题初始化
-      try {
-        const storageKey = "vite-ui-theme"
-        let theme = localStorage.getItem(storageKey)
-        if (theme === "system" || !theme) {
-          theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
-        }
-        document.documentElement.classList.add(theme)
-      } catch (e) {
-        document.documentElement.classList.add("light")
+
+<head>
+  <script>
+    // 在页面渲染前就执行主题初始化
+    try {
+      const storageKey = "vite-ui-theme"
+      let theme = localStorage.getItem(storageKey)
+      if (theme === "system" || !theme) {
+        theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
       }
-    </script>
-    <style>
-      /* Prevent FOUC in Safari */
-      html:not(.dark):not(.light) * {
-        visibility: hidden;
+      document.documentElement.classList.add(theme)
+    } catch (e) {
+      document.documentElement.classList.add("light")
+    }
+  </script>
+  <style>
+    /* Prevent FOUC in Safari */
+    html:not(.dark):not(.light) * {
+      visibility: hidden;
+    }
+
+    :root {
+      color-scheme: light;
+      --bg: #ffffff;
+    }
+
+    html.dark {
+      color-scheme: dark;
+      --bg: #242424;
+    }
+
+    html.light {
+      color-scheme: light;
+      --bg: #ffffff;
+    }
+
+    html {
+      background-color: var(--bg) !important;
+    }
+
+    body {
+      background-color: var(--bg) !important;
+    }
+
+    #root {
+      background-color: var(--bg) !important;
+      visibility: hidden;
+    }
+
+    #root.loaded {
+      visibility: visible;
+      animation: fadein 0.2s;
+    }
+
+    @keyframes fadein {
+      from {
+        opacity: 0;
       }
 
-      :root {
-        color-scheme: light;
-        --bg: #ffffff;
+      to {
+        opacity: 1;
+      }
+    }
+  </style>
+  <script>
+    ; (function () {
+      const storageKey = "vite-ui-theme"
+      const theme = localStorage.getItem(storageKey) || "system"
+      const root = document.documentElement
+
+      function updateThemeColor(isDark) {
+        const themeColor = isDark ? "#242424" : "#fafafa"
+        document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor)
       }
 
-      html.dark {
-        color-scheme: dark;
-        --bg: #242424;
+      function setTheme(newTheme) {
+        root.classList.remove("light", "dark")
+        root.classList.add(newTheme)
+        updateThemeColor(newTheme === "dark")
       }
 
-      html.light {
-        color-scheme: light;
-        --bg: #ffffff;
-      }
+      if (theme === "system") {
+        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+        setTheme(systemTheme)
 
-      html {
-        background-color: var(--bg) !important;
-      }
-
-      body {
-        background-color: var(--bg) !important;
-      }
-
-      #root {
-        background-color: var(--bg) !important;
-        visibility: hidden;
-      }
-
-      #root.loaded {
-        visibility: visible;
-        animation: fadein 0.2s;
-      }
-
-      @keyframes fadein {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
-      }
-    </style>
-    <script>
-      ;(function () {
-        const storageKey = "vite-ui-theme"
-        const theme = localStorage.getItem(storageKey) || "system"
-        const root = document.documentElement
-
-        function updateThemeColor(isDark) {
-          const themeColor = isDark ? "#242424" : "#fafafa"
-          document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor)
-        }
-
-        function setTheme(newTheme) {
-          root.classList.remove("light", "dark")
-          root.classList.add(newTheme)
-          updateThemeColor(newTheme === "dark")
-        }
-
-        if (theme === "system") {
-          const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
-          setTheme(systemTheme)
-
-          window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
-            setTheme(e.matches ? "dark" : "light")
-          })
-        } else {
-          setTheme(theme)
-        }
-
-        // Add loaded class after React has mounted
-        window.addEventListener("load", () => {
-          const root = document.getElementById("root")
-          if (root) {
-            // 使用 RAF 确保在下一帧渲染
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                root.classList.add("loaded")
-              })
-            })
-          }
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+          setTheme(e.matches ? "dark" : "light")
         })
-      })()
-    </script>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/apple-touch-icon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Komari Monitor</title>
-    <meta name="description" content="A simple server monitor tool." />
-    <!-- PWA -->
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="hsl(0 0% 98%)" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Nezha Monitoring" />
-    <link rel="apple-touch-icon" href="/android-chrome-192x192.png" />
+      } else {
+        setTheme(theme)
+      }
 
-    <link rel="stylesheet" href="https://fastly.jsdelivr.net/gh/lipis/flag-icons@7.0.0/css/flag-icons.min.css" />
-    <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/font-logos@1/assets/font-logos.css" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-    <script>
+      // Add loaded class after React has mounted
+      window.addEventListener("load", () => {
+        const root = document.getElementById("root")
+        if (root) {
+          // 使用 RAF 确保在下一帧渲染
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              root.classList.add("loaded")
+            })
+          })
+        }
+      })
+    })()
+  </script>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/apple-touch-icon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Komari Monitor</title>
+  <meta name="description" content="A simple server monitor tool." />
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="hsl(0 0% 98%)" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Nezha Monitoring" />
+  <link rel="apple-touch-icon" href="/android-chrome-192x192.png" />
+
+  <link rel="stylesheet" href="https://fastly.jsdelivr.net/gh/lipis/flag-icons@7.0.0/css/flag-icons.min.css" />
+  <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/font-logos@1/assets/font-logos.css" />
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+  <script>
       // 移除GPU卡片
-      ;(function () {
+      ; (function () {
         "use strict"
 
         const containerSelector =
           "#root > div > main > div.mx-auto.w-full.max-w-5xl.px-0.flex.flex-col.gap-4.server-info > div:nth-child(3) > section > div:nth-child(2)"
         const pRelativeSelector = "div > section > div.flex.items-center.justify-between > section.flex.flex-col.items-center.gap-2 > p"
-        
+
         const TAG = "[remove-gpu-if-present]"
 
         function processOne(container) {
@@ -172,55 +176,57 @@
         findAndProcess()
 
         // 2) 使用 MutationObserver 监视 body 的变化（在单页应用中非常有用）
+        let processedOnce = false
         const mo = new MutationObserver((mutations) => {
-          // 尽量快速返回以降低开销
+          // 避免重复处理
+          if (processedOnce) return
+          
+          // 使用防抖优化性能
           if (findAndProcess()) {
-            // 删除成功后可以选择断开 observer（如果只想处理一次）
-            // mo.disconnect();
+            processedOnce = true
+            mo.disconnect()
           }
         })
         mo.observe(document.body, { childList: true, subtree: true })
 
-        // 3) 监听单页应用的路由变化（覆盖 pushState/replaceState 并监听 popstate）
-        ;(function hijackHistoryEvents() {
-          try {
-            const originalPush = history.pushState
-            const originalReplace = history.replaceState
-            history.pushState = function () {
-              const ret = originalPush.apply(this, arguments)
-              window.dispatchEvent(new Event("locationchange"))
-              return ret
+          // 3) 监听单页应用的路由变化（覆盖 pushState/replaceState 并监听 popstate）
+          ; (function hijackHistoryEvents() {
+            try {
+              const originalPush = history.pushState
+              const originalReplace = history.replaceState
+              history.pushState = function () {
+                const ret = originalPush.apply(this, arguments)
+                window.dispatchEvent(new Event("locationchange"))
+                return ret
+              }
+              history.replaceState = function () {
+                const ret = originalReplace.apply(this, arguments)
+                window.dispatchEvent(new Event("locationchange"))
+                return ret
+              }
+              window.addEventListener("popstate", function () {
+                window.dispatchEvent(new Event("locationchange"))
+              })
+              window.addEventListener("locationchange", function () {
+                // 微延时，让框架先渲染 DOM
+                setTimeout(findAndProcess, 150)
+              })
+            } catch (err) {
             }
-            history.replaceState = function () {
-              const ret = originalReplace.apply(this, arguments)
-              window.dispatchEvent(new Event("locationchange"))
-              return ret
-            }
-            window.addEventListener("popstate", function () {
-              window.dispatchEvent(new Event("locationchange"))
-            })
-            window.addEventListener("locationchange", function () {
-              // 微延时，让框架先渲染 DOM
-              setTimeout(findAndProcess, 150)
-            })
-          } catch (err) {
-          }
-        })()
+          })()
 
         // 4) 额外的轮询保险（如果 MutationObserver 未捕获到）
-        const maxTries = 30
+        const maxTries = 20
         let tries = 0
         const intervalId = setInterval(() => {
           tries++
-          if (findAndProcess() || tries >= maxTries) {
+          if (processedOnce || findAndProcess() || tries >= maxTries) {
             clearInterval(intervalId)
-            if (tries >= maxTries) {
-              console.info(TAG, "达到轮询上限，停止轮询。")
-            }
           }
-        }, 500)
+        }, 800)
 
       })()
-    </script>
-  </body>
+  </script>
+</body>
+
 </html>
