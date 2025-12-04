@@ -172,7 +172,7 @@ export const NetworkChartClient = React.memo(function NetworkChart({
     })
   }, [])
 
-  const getColorByIndex = useCallback(
+  const getColorByIndex = React.useCallback(
     (chart: string) => {
       const index = chartDataKey.indexOf(chart)
       return `hsl(var(--chart-${(index % 10) + 1}))`
@@ -180,7 +180,7 @@ export const NetworkChartClient = React.memo(function NetworkChart({
     [chartDataKey],
   )
 
-  const chartButtons = useMemo(
+  const chartButtons = React.useMemo(
     () =>
       chartDataKey.map((key) => {
         const monitorData = chartData[key]
@@ -208,7 +208,7 @@ export const NetworkChartClient = React.memo(function NetworkChart({
     [chartDataKey, activeCharts, chartData, handleButtonClick],
   )
 
-  const chartElements = useMemo(() => {
+  const chartElements = React.useMemo(() => {
     const elements = []
 
     // If exactly one chart is selected, show delay line and packet loss area
