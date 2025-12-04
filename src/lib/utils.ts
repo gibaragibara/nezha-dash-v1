@@ -596,6 +596,7 @@ export const komariToNezhaWebsocketResponse = (data: any): NezhaWebsocketRespons
     return {
       id: uuidToNumber(uuid),
       name: server.name,
+      tag: server.tags ? sanitizeTags(String(server.tags)) : undefined,
       public_note: buildPublicNoteFromNode(server, server.public_remark || ""),
       last_active: status ? status.time : "0000-00-00T00:00:00Z",
       country_code: countryFlagToCode(server.region),
