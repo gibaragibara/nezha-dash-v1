@@ -28,12 +28,27 @@ const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
     const fetchSettingsConfig = async () => {
       try {
         const response = await fetch("/komari-theme.json")
+        
+        // 检查响应是否成功
+        if (!response.ok) {
+          console.warn("Settings config file not found, using defaults")
+          return
+        }
+        
+        // 检查 Content-Type 是否为 JSON
+        const contentType = response.headers.get("content-type")
+        if (!contentType || !contentType.includes("application/json")) {
+          console.warn("Settings config is not JSON, skipping")
+          return
+        }
+        
         const data = await response.json()
         if (data.configuration?.data) {
           setSettingsConfig(data.configuration.data)
         }
       } catch (error) {
-        console.error("Failed to fetch settings config:", error)
+        // 静默处理错误，使用默认配置
+        console.debug("Settings config not available:", error)
       }
     }
 

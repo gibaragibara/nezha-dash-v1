@@ -16,7 +16,7 @@ import { Card } from "./ui/card"
 export default function ServerCard({ now, serverInfo }: { now: number; serverInfo: NezhaServer }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { name, country_code, online, cpu, up, down, mem, stg, net_in_transfer, net_out_transfer, public_note, platform } = formatNezhaInfo(
+  const { name, country_code, online, cpu, up, down, mem, stg, net_in_transfer, net_out_transfer, public_note, platform, tcp, udp } = formatNezhaInfo(
     now,
     serverInfo,
   )
@@ -127,19 +127,35 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
           </div>
         </section>
         {showNetTransfer && (
-          <section className={"flex items-center w-full justify-between gap-1"}>
-            <Badge
-              variant="secondary"
-              className="items-center flex-1 justify-center rounded-[8px] text-nowrap text-[11px] border-muted-50 shadow-md shadow-neutral-200/30 dark:shadow-none"
-            >
-              {t("serverCard.upload")}:{formatBytes(net_out_transfer)}
-            </Badge>
-            <Badge
-              variant="outline"
-              className="items-center flex-1 justify-center rounded-[8px] text-nowrap text-[11px] shadow-md shadow-neutral-200/30 dark:shadow-none"
-            >
-              {t("serverCard.download")}:{formatBytes(net_in_transfer)}
-            </Badge>
+          <section className={"flex flex-col w-full gap-1"}>
+            <div className="flex items-center justify-between gap-1">
+              <Badge
+                variant="secondary"
+                className="items-center flex-1 justify-center rounded-[8px] text-nowrap text-[11px] border-muted-50 shadow-md shadow-neutral-200/30 dark:shadow-none"
+              >
+                {t("serverCard.upload")}:{formatBytes(net_out_transfer)}
+              </Badge>
+              <Badge
+                variant="outline"
+                className="items-center flex-1 justify-center rounded-[8px] text-nowrap text-[11px] shadow-md shadow-neutral-200/30 dark:shadow-none"
+              >
+                {t("serverCard.download")}:{formatBytes(net_in_transfer)}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between gap-1">
+              <Badge
+                variant="secondary"
+                className="items-center flex-1 justify-center rounded-[8px] text-nowrap text-[11px] border-muted-50 shadow-md shadow-neutral-200/30 dark:shadow-none"
+              >
+                TCP:{tcp}
+              </Badge>
+              <Badge
+                variant="outline"
+                className="items-center flex-1 justify-center rounded-[8px] text-nowrap text-[11px] shadow-md shadow-neutral-200/30 dark:shadow-none"
+              >
+                UDP:{udp}
+              </Badge>
+            </div>
           </section>
         )}
         {parsedData?.planDataMod && <PlanInfo parsedData={parsedData} />}
@@ -149,7 +165,7 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
     <Card
       className={cn(
         "flex flex-col items-center justify-start gap-3 sm:gap-0 p-3 md:px-5 cursor-pointer hover:bg-accent/50 transition-colors",
-        showNetTransfer ? "lg:min-h-[91px] min-h-[123px]" : "lg:min-h-[61px] min-h-[93px]",
+        showNetTransfer ? "lg:min-h-[115px] min-h-[160px]" : "lg:min-h-[61px] min-h-[93px]",
         {
           "flex-col": fixedTopServerName,
           "lg:flex-row": !fixedTopServerName,

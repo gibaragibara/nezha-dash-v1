@@ -1,14 +1,13 @@
 import { ModeToggle } from "@/components/ThemeSwitcher"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useBackground } from "@/hooks/use-background"
 import { useWebSocketContext } from "@/hooks/use-websocket-context"
 import { fetchSetting } from "@/lib/nezha-api"
 import { cn } from "@/lib/utils"
 import NumberFlow, { NumberFlowGroup } from "@number-flow/react"
 import { useQuery } from "@tanstack/react-query"
 import { AnimatePresence, m } from "framer-motion"
-import { ImageMinus, LogIn, Settings } from "lucide-react"
+import { LogIn, Settings } from "lucide-react"
 import { DateTime } from "luxon"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -23,7 +22,6 @@ import { Button } from "./ui/button"
 function Header() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { backgroundImage, updateBackground } = useBackground()
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   const { data: settingData, isLoading } = useQuery({
@@ -45,7 +43,7 @@ function Header() {
   // @ts-expect-error CustomDesc is a global variable
   const customDesc = window.CustomDesc || "Komari Monitor"
 
-  const customMobileBackgroundImage = window.CustomMobileBackgroundImage !== "" ? window.CustomMobileBackgroundImage : undefined
+  const customBackgroundImage = (window.CustomBackgroundImage as string) !== "" ? window.CustomBackgroundImage : undefined
 
   useEffect(() => {
     const link = document.querySelector("link[rel*='icon']") || document.createElement("link")
@@ -61,22 +59,6 @@ function Header() {
   // useEffect(() => {
   //   document.title = siteName || "哪吒监控 Nezha Monitoring"
   // }, [siteName])
-
-  const handleBackgroundToggle = () => {
-    if (window.CustomBackgroundImage) {
-      // Store the current background image before removing it
-      sessionStorage.setItem("savedBackgroundImage", window.CustomBackgroundImage)
-      updateBackground(undefined)
-    } else {
-      // Restore the saved background image
-      const savedImage = sessionStorage.getItem("savedBackgroundImage")
-      if (savedImage) {
-        updateBackground(savedImage)
-      }
-    }
-  }
-
-  const customBackgroundImage = backgroundImage
 
   return (
     <div className="mx-auto w-full max-w-5xl">
@@ -120,19 +102,6 @@ function Header() {
           </Button>
           <LanguageSwitcher />
           <ModeToggle />
-          {(customBackgroundImage || sessionStorage.getItem("savedBackgroundImage")) && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBackgroundToggle}
-              className={cn("rounded-full px-[9px] bg-white dark:bg-black", {
-                "bg-white/70 dark:bg-black/70": customBackgroundImage,
-                "hidden sm:block": customMobileBackgroundImage,
-              })}
-            >
-              <ImageMinus className="w-4 h-4" />
-            </Button>
-          )}
           <a href="/admin" target="_blank">
             <Button
               variant="outline"

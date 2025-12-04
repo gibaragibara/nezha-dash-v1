@@ -10,11 +10,9 @@ export function useCardOpacity() {
 
   const cardOpacityStyle = useMemo(() => {
     if (!customBackgroundImage) {
-      console.log("No background image detected, opacity will not be applied")
       return {}
     }
     const opacity = Math.max(0, Math.min(100, config.cardOpacity || 70))
-    console.log(`Applying card opacity: ${opacity}%`, { backgroundImage: customBackgroundImage })
     // 返回内联样式对象
     return {
       backgroundColor: `hsl(var(--card) / ${opacity}%)`,

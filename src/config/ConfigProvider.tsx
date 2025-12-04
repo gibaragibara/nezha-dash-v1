@@ -23,10 +23,8 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         const km_public = await SharedClient().call("common:getPublicInfo")
         if (!km_public.error && km_public.theme_settings) {
           const themeSettings = km_public.theme_settings as Partial<ConfigOptions>
-          console.log("Loaded theme settings:", themeSettings)
           setConfig({ ...DEFAULT_CONFIG, ...themeSettings })
         } else {
-          console.warn("No theme_settings found, using defaults")
           setConfig(DEFAULT_CONFIG)
         }
       } catch (error) {

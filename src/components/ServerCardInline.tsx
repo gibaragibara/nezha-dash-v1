@@ -17,7 +17,7 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
   const { t } = useTranslation()
   const navigate = useNavigate()
   const cardOpacityStyle = useCardOpacity()
-  const { name, country_code, online, cpu, up, down, mem, stg, platform, uptime, net_in_transfer, net_out_transfer, public_note } = formatNezhaInfo(
+  const { name, country_code, online, cpu, up, down, mem, stg, platform, uptime, net_in_transfer, net_out_transfer, public_note, tcp, udp } = formatNezhaInfo(
     now,
     serverInfo,
   )
@@ -35,7 +35,7 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
   return online ? (
     <section>
       <Card
-        className="flex items-center lg:flex-row justify-start gap-3 p-3 md:px-5 cursor-pointer hover:bg-accent/50 transition-colors min-w-[900px] w-full"
+        className="flex items-center lg:flex-row justify-start gap-3 p-3 md:px-5 cursor-pointer hover:bg-accent/50 transition-colors min-w-[1000px] w-full"
         style={cardOpacityStyle}
         onClick={cardClick}
       >
@@ -51,7 +51,7 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
         </section>
         <Separator orientation="vertical" className="h-8 mx-0 ml-2" />
         <div className="flex flex-col gap-1">
-          <section className={cn("grid grid-cols-9 items-center gap-3 flex-1")}>
+          <section className={cn("grid grid-cols-11 items-center gap-3 flex-1")}>
             <div className={"items-center flex flex-row gap-2 whitespace-nowrap"}>
               <div className="text-xs font-semibold">
                 {platform.includes("Windows") ? (
@@ -108,6 +108,14 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
               <p className="text-xs text-muted-foreground">{t("serverCard.totalDownload")}</p>
               <div className="flex items-center text-xs font-semibold">{formatBytes(net_in_transfer)}</div>
             </div>
+            <div className={"flex w-12 flex-col"}>
+              <p className="text-xs text-muted-foreground">TCP</p>
+              <div className="flex items-center text-xs font-semibold">{tcp}</div>
+            </div>
+            <div className={"flex w-12 flex-col"}>
+              <p className="text-xs text-muted-foreground">UDP</p>
+              <div className="flex items-center text-xs font-semibold">{udp}</div>
+            </div>
           </section>
           {parsedData?.planDataMod && <PlanInfo parsedData={parsedData} />}
         </div>
@@ -115,7 +123,7 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
     </section>
   ) : (
     <Card
-      className="flex  min-h-[61px] min-w-[900px] items-center justify-start p-3 md:px-5 flex-row cursor-pointer hover:bg-accent/50 transition-colors"
+      className="flex  min-h-[61px] min-w-[1000px] items-center justify-start p-3 md:px-5 flex-row cursor-pointer hover:bg-accent/50 transition-colors"
       style={cardOpacityStyle}
       onClick={cardClick}
     >
