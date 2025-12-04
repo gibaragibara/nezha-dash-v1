@@ -87,23 +87,23 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
               <div className="flex items-center text-xs font-semibold">{stg.toFixed(2)}%</div>
               <ServerUsageBar value={stg} />
             </div>
-            <div className={"flex w-20 flex-col"}>
+            <div className={"flex min-w-[5rem] flex-col"}>
               <p className="text-xs text-muted-foreground">{t("serverCard.upload")}</p>
-              <div className="flex items-center text-xs font-semibold">
+              <div className="flex items-center text-xs font-semibold whitespace-nowrap">
                 {up >= 1024 ? `${(up / 1024).toFixed(2)}G/s` : up >= 1 ? `${up.toFixed(2)}M/s` : `${(up * 1024).toFixed(2)}K/s`}
               </div>
             </div>
-            <div className={"flex w-20 flex-col"}>
+            <div className={"flex min-w-[5rem] flex-col"}>
               <p className="text-xs text-muted-foreground">{t("serverCard.download")}</p>
-              <div className="flex items-center text-xs font-semibold">
+              <div className="flex items-center text-xs font-semibold whitespace-nowrap">
                 {down >= 1024 ? `${(down / 1024).toFixed(2)}G/s` : down >= 1 ? `${down.toFixed(2)}M/s` : `${(down * 1024).toFixed(2)}K/s`}
               </div>
             </div>
-            <div className={"flex w-10 flex-col"}>
+            <div className={"flex min-w-[2.5rem] flex-col"}>
               <p className="text-xs text-muted-foreground">TCP</p>
               <div className="flex items-center text-xs font-semibold">{tcp}</div>
             </div>
-            <div className={"flex w-10 flex-col"}>
+            <div className={"flex min-w-[2.5rem] flex-col"}>
               <p className="text-xs text-muted-foreground">UDP</p>
               <div className="flex items-center text-xs font-semibold">{udp}</div>
             </div>
