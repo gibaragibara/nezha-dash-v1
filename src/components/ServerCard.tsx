@@ -73,7 +73,7 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
         {parsedData?.billingDataMod && <BillingInfo parsedData={parsedData} />}
       </div>
       <div className="flex flex-col lg:items-start items-center gap-2">
-        <section className={cn("flex items-center flex-wrap gap-x-3 gap-y-2")}>
+        <section className={cn("flex items-center gap-1.5")}>
           {fixedTopServerName && (
             <div className={"hidden col-span-1 items-center lg:flex lg:flex-row gap-2"}>
               <div className="text-xs font-semibold">
@@ -89,38 +89,38 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
               </div>
             </div>
           )}
-          <div className={"flex w-[3.5rem] flex-col flex-shrink-0"}>
+          <div className={"flex w-[3rem] flex-col flex-shrink-0"}>
             <p className="text-xs text-muted-foreground">{"CPU"}</p>
             <div className="flex items-center text-xs font-semibold">{cpu.toFixed(2)}%</div>
             <ServerUsageBar value={cpu} />
           </div>
-          <div className={"flex w-[3.5rem] flex-col flex-shrink-0"}>
+          <div className={"flex w-[3rem] flex-col flex-shrink-0"}>
             <p className="text-xs text-muted-foreground">{t("serverCard.mem")}</p>
             <div className="flex items-center text-xs font-semibold">{mem.toFixed(2)}%</div>
             <ServerUsageBar value={mem} />
           </div>
-          <div className={"flex w-[3.5rem] flex-col flex-shrink-0"}>
+          <div className={"flex w-[3rem] flex-col flex-shrink-0"}>
             <p className="text-xs text-muted-foreground">{t("serverCard.stg")}</p>
             <div className="flex items-center text-xs font-semibold">{stg.toFixed(2)}%</div>
             <ServerUsageBar value={stg} />
           </div>
-          <div className={"flex w-[5rem] flex-col flex-shrink-0"}>
+          <div className={"flex w-[4rem] flex-col flex-shrink-0"}>
             <p className="text-xs text-muted-foreground">{t("serverCard.upload")}</p>
             <div className="flex items-center text-xs font-semibold whitespace-nowrap">
               {up >= 1024 ? `${(up / 1024).toFixed(2)}G/s` : up >= 1 ? `${up.toFixed(2)}M/s` : `${(up * 1024).toFixed(2)}K/s`}
             </div>
           </div>
-          <div className={"flex w-[5rem] flex-col flex-shrink-0"}>
+          <div className={"flex w-[4rem] flex-col flex-shrink-0"}>
             <p className="text-xs text-muted-foreground">{t("serverCard.download")}</p>
             <div className="flex items-center text-xs font-semibold whitespace-nowrap">
               {down >= 1024 ? `${(down / 1024).toFixed(2)}G/s` : down >= 1 ? `${down.toFixed(2)}M/s` : `${(down * 1024).toFixed(2)}K/s`}
             </div>
           </div>
-          <div className={"flex w-[2.5rem] flex-col flex-shrink-0"}>
+          <div className={"flex w-[2rem] flex-col flex-shrink-0"}>
             <p className="text-xs text-muted-foreground">TCP</p>
             <div className="flex items-center text-xs font-semibold">{tcp}</div>
           </div>
-          <div className={"flex w-[2.5rem] flex-col flex-shrink-0"}>
+          <div className={"flex w-[2rem] flex-col flex-shrink-0"}>
             <p className="text-xs text-muted-foreground">UDP</p>
             <div className="flex items-center text-xs font-semibold">{udp}</div>
           </div>
