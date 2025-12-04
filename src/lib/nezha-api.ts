@@ -1,5 +1,5 @@
 import { SharedClient } from "@/hooks/use-rpc2"
-import { LoginUserResponse, MonitorResponse, ServerGroupResponse, ServiceResponse, SettingResponse, NezhaMonitor } from "@/types/nezha-api"
+import { LoginUserResponse, MonitorResponse, ServerGroupResponse, ServiceResponse, SettingResponse, NezhaMonitor, LoadHistoryResponse } from "@/types/nezha-api"
 import { DateTime } from "luxon"
 
 import { getKomariNodes, uuidToNumber } from "./utils"
@@ -88,7 +88,7 @@ export const fetchMonitor = async (server_id: number): Promise<MonitorResponse> 
         server_name: serverName,
         created_at: [],
         avg_delay: [],
-        packet_loss: [task.loss??0],
+        packet_loss: [task.loss ?? 0],
       })
     }
 
@@ -179,3 +179,35 @@ export const fetchSetting = async (): Promise<SettingResponse> => {
   }
   return km_data
 }
+
+// 获取负载历史记录
+export const fetchLoadHistory = async (
+  server_id: number,
+  hours: number = 24
+): Promise<LoadHistoryResponse> => {
+  const km_nodes: Record<string, any> = await getKomariNodes()
+  if (km_nodes?.error) {
+    throw new Error(km_nodes.error)
+  }
+
+  const uuid = Object.keys(km_nodes).find((id) => uuidToNumber(id) === server_id)
+  if (!uuid) {
+    return { count: 0, records: [] }
+  }
+
+  const result: any = await SharedClient().call("common:getRecords", {
+    type: "load",
+    uuid: uuid,
+    hours: hours,
+  })
+
+  if (result?.records?.[uuid]) {
+    return {
+      count: result.count || result.records[uuid].length,
+      records: result.records[uuid],
+    }
+  }
+
+  return { count: 0, records: [] }
+}
+

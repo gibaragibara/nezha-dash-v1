@@ -133,5 +133,14 @@
   "ToggleLightMode": "Toggle Light Mode",
   "ToggleDarkMode": "Toggle Dark Mode",
   "ToggleSystemMode": "Toggle System Mode",
-  "Home": "Home"
+  "Home": "Home",
+  "timeRange": {
+    "live": "Live",
+    "1hour": "1 Hour",
+    "4hours": "4 Hours",
+    "1day": "1 Day",
+    "7days": "7 Days",
+    "30days": "30 Days",
+    "noData": "No historical data available"
+  }
 }

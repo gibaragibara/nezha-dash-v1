@@ -134,5 +134,14 @@
   "ToggleLightMode": "切换亮色模式",
   "ToggleDarkMode": "切换暗色模式",
   "ToggleSystemMode": "切换系统模式",
-  "Home": "首页"
+  "Home": "首页",
+  "timeRange": {
+    "live": "实时",
+    "1hour": "1小时",
+    "4hours": "4小时",
+    "1day": "1天",
+    "7days": "7天",
+    "30days": "30天",
+    "noData": "暂无历史数据"
+  }
 }

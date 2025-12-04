@@ -159,3 +159,31 @@ export interface SettingResponse {
     version: string
   }
 }
+
+// 负载历史记录
+export interface LoadHistoryRecord {
+  client: string
+  time: string
+  cpu: number
+  gpu?: number
+  ram: number
+  ram_total: number
+  swap: number
+  swap_total: number
+  load: number
+  temp?: number
+  disk: number
+  disk_total: number
+  net_in: number
+  net_out: number
+  net_total_up: number
+  net_total_down: number
+  process: number
+  connections: number
+  connections_udp: number
+}
+
+export interface LoadHistoryResponse {
+  count: number
+  records: LoadHistoryRecord[]
+}
