@@ -4,6 +4,8 @@ import { formatBytes } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import { ArrowDownCircleIcon, ArrowUpCircleIcon } from "@heroicons/react/20/solid"
 import { useTranslation } from "react-i18next"
+import { useAppConfig } from "@/config/hooks"
+import { useCardOpacity } from "@/hooks/use-card-opacity"
 
 type ServerOverviewProps = {
   online: number
@@ -18,14 +20,11 @@ type ServerOverviewProps = {
 export default function ServerOverview({ online, offline, total, up, down, upSpeed, downSpeed }: ServerOverviewProps) {
   const { t } = useTranslation()
   const { status, setStatus } = useStatus()
+  const { config } = useAppConfig()
+  const cardOpacityClass = useCardOpacity()
 
-  // @ts-expect-error DisableAnimatedMan is a global variable
-  const disableAnimatedMan = window.DisableAnimatedMan as boolean
-
-  // @ts-expect-error CustomIllustration is a global variable
-  const customIllustration = window.CustomIllustration || "/animated-man.webp"
-
-  const customBackgroundImage = (window.CustomBackgroundImage as string) !== "" ? window.CustomBackgroundImage : undefined
+  // 使用配置中的插图链接，留空则不显示
+  const illustrationUrl = config.illustrationUrl?.trim() || ""
 
   return (
     <>
@@ -34,9 +33,7 @@ export default function ServerOverview({ online, offline, total, up, down, upSpe
           onClick={() => {
             setStatus("all")
           }}
-          className={cn("hover:border-blue-500 cursor-pointer transition-all", {
-            "bg-card/70": customBackgroundImage,
-          })}
+          className={cn("hover:border-blue-500 cursor-pointer transition-all", cardOpacityClass)}
         >
           <CardContent className="flex h-full items-center px-6 py-3">
             <section className="flex flex-col gap-1">
@@ -56,9 +53,7 @@ export default function ServerOverview({ online, offline, total, up, down, upSpe
           }}
           className={cn(
             "cursor-pointer hover:ring-green-500 ring-1 ring-transparent transition-all",
-            {
-              "bg-card/70": customBackgroundImage,
-            },
+            cardOpacityClass,
             {
               "ring-green-500 ring-2 border-transparent": status === "online",
             },
@@ -84,9 +79,7 @@ export default function ServerOverview({ online, offline, total, up, down, upSpe
           }}
           className={cn(
             "cursor-pointer hover:ring-red-500 ring-1 ring-transparent transition-all",
-            {
-              "bg-card/70": customBackgroundImage,
-            },
+            cardOpacityClass,
             {
               "ring-red-500 ring-2 border-transparent": status === "offline",
             },
@@ -106,9 +99,7 @@ export default function ServerOverview({ online, offline, total, up, down, upSpe
           </CardContent>
         </Card>
         <Card
-          className={cn("hover:ring-purple-500 ring-1 ring-transparent transition-all", {
-            "bg-card/70": customBackgroundImage,
-          })}
+          className={cn("hover:ring-purple-500 ring-1 ring-transparent transition-all", cardOpacityClass)}
         >
           <CardContent className="flex h-full items-center relative px-6 py-3">
             <section className="flex flex-col gap-1 w-full">
@@ -130,11 +121,11 @@ export default function ServerOverview({ online, offline, total, up, down, upSpe
                 </p>
               </section>
             </section>
-            {!disableAnimatedMan && (
+            {illustrationUrl && (
               <img
                 className="absolute right-3 top-[-85px] z-50 w-20 scale-90 group-hover:opacity-50 md:scale-100 transition-all"
-                alt={"animated-man"}
-                src={customIllustration}
+                alt="decoration"
+                src={illustrationUrl}
                 loading="eager"
               />
             )}

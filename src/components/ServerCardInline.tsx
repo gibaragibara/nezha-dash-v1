@@ -6,6 +6,7 @@ import { cn, formatNezhaInfo, parsePublicNote } from "@/lib/utils"
 import { NezhaServer } from "@/types/nezha-api"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { useCardOpacity } from "@/hooks/use-card-opacity"
 
 import PlanInfo from "./PlanInfo"
 import BillingInfo from "./billingInfo"
@@ -15,6 +16,7 @@ import { Separator } from "./ui/separator"
 export default function ServerCardInline({ now, serverInfo }: { now: number; serverInfo: NezhaServer }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const cardOpacityClass = useCardOpacity()
   const { name, country_code, online, cpu, up, down, mem, stg, platform, uptime, net_in_transfer, net_out_transfer, public_note } = formatNezhaInfo(
     now,
     serverInfo,
@@ -27,7 +29,6 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
 
   const showFlag = true
 
-  const customBackgroundImage = (window.CustomBackgroundImage as string) !== "" ? window.CustomBackgroundImage : undefined
 
   const parsedData = parsePublicNote(public_note)
 
@@ -36,9 +37,7 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
       <Card
         className={cn(
           "flex items-center lg:flex-row justify-start gap-3 p-3 md:px-5 cursor-pointer hover:bg-accent/50 transition-colors min-w-[900px] w-full",
-          {
-            "bg-card/70": customBackgroundImage,
-          },
+          cardOpacityClass,
         )}
         onClick={cardClick}
       >
@@ -120,9 +119,7 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
     <Card
       className={cn(
         "flex  min-h-[61px] min-w-[900px] items-center justify-start p-3 md:px-5 flex-row cursor-pointer hover:bg-accent/50 transition-colors",
-        {
-          "bg-card/70": customBackgroundImage,
-        },
+        cardOpacityClass,
       )}
       onClick={cardClick}
     >

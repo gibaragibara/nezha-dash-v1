@@ -33,6 +33,8 @@ export interface ConfigOptions {
   backgroundImage: string // 桌面端背景图片URL
   backgroundImageMobile: string // 移动端背景图片URL
   backgroundAlignment: string // 背景对齐方式
+  cardOpacity: number // 卡片透明度 (0-100)
+  illustrationUrl: string // 右上角插图链接
 }
 
 // 默认配置
@@ -41,4 +43,6 @@ export const DEFAULT_CONFIG: ConfigOptions = {
   backgroundImage: "",
   backgroundImageMobile: "",
   backgroundAlignment: "cover,center",
+  cardOpacity: 70,
+  illustrationUrl: "/animated-man.webp",
 }

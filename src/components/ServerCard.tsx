@@ -6,6 +6,7 @@ import { cn, formatNezhaInfo, parsePublicNote } from "@/lib/utils"
 import { NezhaServer } from "@/types/nezha-api"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
+import { useCardOpacity } from "@/hooks/use-card-opacity"
 
 import PlanInfo from "./PlanInfo"
 import BillingInfo from "./billingInfo"
@@ -26,8 +27,7 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
   }
 
   const showFlag = true
-
-  const customBackgroundImage = (window.CustomBackgroundImage as string) !== "" ? window.CustomBackgroundImage : undefined
+  const cardOpacityClass = useCardOpacity()
 
   // @ts-expect-error ShowNetTransfer is a global variable
   const showNetTransfer = window.ShowNetTransfer as boolean
@@ -45,9 +45,7 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
           "flex-col": fixedTopServerName,
           "lg:flex-row": !fixedTopServerName,
         },
-        {
-          "bg-card/70": customBackgroundImage,
-        },
+        cardOpacityClass,
       )}
       onClick={cardClick}
     >
@@ -156,9 +154,7 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
           "flex-col": fixedTopServerName,
           "lg:flex-row": !fixedTopServerName,
         },
-        {
-          "bg-card/70": customBackgroundImage,
-        },
+        cardOpacityClass,
       )}
       onClick={cardClick}
     >

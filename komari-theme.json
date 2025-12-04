@@ -45,6 +45,24 @@
                 "type": "string",
                 "default": "cover,center",
                 "help": "背景图片的对齐方式，使用逗号分隔大小和位置。大小可选: cover(覆盖), contain(包含), fill(填充); 位置可选: center(居中), top(顶部), bottom(底部), left(左侧), right(右侧)"
+            },
+            {
+                "name": "界面设置",
+                "type": "title"
+            },
+            {
+                "key": "cardOpacity",
+                "name": "卡片透明度",
+                "type": "number",
+                "default": 70,
+                "help": "设置界面卡片的透明度，范围 0-100，数值越大越不透明。仅在设置了背景图片时生效"
+            },
+            {
+                "key": "illustrationUrl",
+                "name": "右上角插图链接",
+                "type": "string",
+                "default": "/animated-man.webp",
+                "help": "右上角装饰图片的URL链接，留空则不显示"
             }
         ]
     }
