@@ -13,8 +13,8 @@ export const fetchServerGroup = async (): Promise<ServerGroupResponse> => {
     throw new Error(kmNodes.error)
   }
   // extract groups
-  let groups: string[] = []
-  Object.entries(kmNodes).forEach(([_, value]) => {
+  const groups: string[] = []
+  Object.entries(kmNodes).forEach(([, value]) => {
     if (value.group && !groups.includes(value.group)) {
       groups.push(value.group)
     }
@@ -31,8 +31,8 @@ export const fetchServerGroup = async (): Promise<ServerGroupResponse> => {
           name: group,
         },
         servers: Object.entries(kmNodes)
-          .filter(([_, value]) => value.group === group)
-          .map(([key, _]) => uuidToNumber(key)),
+          .filter(([, value]) => value.group === group)
+          .map(([key]) => uuidToNumber(key)),
       })),
     ],
   }
