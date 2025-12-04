@@ -21,7 +21,7 @@ export default function ServerOverview({ online, offline, total, up, down, upSpe
   const { t } = useTranslation()
   const { status, setStatus } = useStatus()
   const { config } = useAppConfig()
-  const cardOpacityClass = useCardOpacity()
+  const cardOpacityStyle = useCardOpacity()
 
   // 使用配置中的插图链接，留空则不显示
   const illustrationUrl = config.illustrationUrl?.trim() || ""
@@ -33,7 +33,8 @@ export default function ServerOverview({ online, offline, total, up, down, upSpe
           onClick={() => {
             setStatus("all")
           }}
-          className={cn("hover:border-blue-500 cursor-pointer transition-all", cardOpacityClass)}
+          className="hover:border-blue-500 cursor-pointer transition-all"
+          style={cardOpacityStyle}
         >
           <CardContent className="flex h-full items-center px-6 py-3">
             <section className="flex flex-col gap-1">
@@ -53,11 +54,11 @@ export default function ServerOverview({ online, offline, total, up, down, upSpe
           }}
           className={cn(
             "cursor-pointer hover:ring-green-500 ring-1 ring-transparent transition-all",
-            cardOpacityClass,
             {
               "ring-green-500 ring-2 border-transparent": status === "online",
             },
           )}
+          style={cardOpacityStyle}
         >
           <CardContent className="flex h-full items-center px-6 py-3">
             <section className="flex flex-col gap-1">
@@ -79,11 +80,11 @@ export default function ServerOverview({ online, offline, total, up, down, upSpe
           }}
           className={cn(
             "cursor-pointer hover:ring-red-500 ring-1 ring-transparent transition-all",
-            cardOpacityClass,
             {
               "ring-red-500 ring-2 border-transparent": status === "offline",
             },
           )}
+          style={cardOpacityStyle}
         >
           <CardContent className="flex h-full items-center px-6 py-3">
             <section className="flex flex-col gap-1">
@@ -99,7 +100,8 @@ export default function ServerOverview({ online, offline, total, up, down, upSpe
           </CardContent>
         </Card>
         <Card
-          className={cn("hover:ring-purple-500 ring-1 ring-transparent transition-all", cardOpacityClass)}
+          className="hover:ring-purple-500 ring-1 ring-transparent transition-all"
+          style={cardOpacityStyle}
         >
           <CardContent className="flex h-full items-center relative px-6 py-3">
             <section className="flex flex-col gap-1 w-full">

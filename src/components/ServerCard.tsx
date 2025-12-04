@@ -27,7 +27,7 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
   }
 
   const showFlag = true
-  const cardOpacityClass = useCardOpacity()
+  const cardOpacityStyle = useCardOpacity()
 
   // @ts-expect-error ShowNetTransfer is a global variable
   const showNetTransfer = window.ShowNetTransfer as boolean
@@ -45,8 +45,8 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
           "flex-col": fixedTopServerName,
           "lg:flex-row": !fixedTopServerName,
         },
-        cardOpacityClass,
       )}
+      style={cardOpacityStyle}
       onClick={cardClick}
     >
       <section
@@ -154,8 +154,8 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
           "flex-col": fixedTopServerName,
           "lg:flex-row": !fixedTopServerName,
         },
-        cardOpacityClass,
       )}
+      style={cardOpacityStyle}
       onClick={cardClick}
     >
       <section

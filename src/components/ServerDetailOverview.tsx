@@ -4,6 +4,7 @@ import { ServerDetailLoading } from "@/components/loading/ServerDetailLoading"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { useWebSocketContext } from "@/hooks/use-websocket-context"
+import { useCardOpacity } from "@/hooks/use-card-opacity"
 import { formatBytes } from "@/lib/format"
 import { cn, formatNezhaInfo } from "@/lib/utils"
 import { NezhaWebsocketResponse } from "@/types/nezha-api"
@@ -19,6 +20,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/t
 export default function ServerDetailOverview({ server_id }: { server_id: string }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const cardOpacityStyle = useCardOpacity()
+  const customBackgroundImage = (window.CustomBackgroundImage as string) !== "" ? window.CustomBackgroundImage : undefined
 
   const [hasHistory, setHasHistory] = useState(false)
 
@@ -77,15 +80,11 @@ export default function ServerDetailOverview({ server_id }: { server_id: string 
     boot_time_string,
   } = formatNezhaInfo(nezhaWsData.now, server)
 
-  const customBackgroundImage = (window.CustomBackgroundImage as string) !== "" ? window.CustomBackgroundImage : undefined
-
   countries.registerLocale(enLocale)
 
   return (
     <div
-      className={cn({
-        "bg-card/70 p-4 rounded-[10px]": customBackgroundImage,
-      })}
+      style={customBackgroundImage ? { ...cardOpacityStyle, padding: "1rem", borderRadius: "10px" } : {}}
     >
       <div
         onClick={linkClick}

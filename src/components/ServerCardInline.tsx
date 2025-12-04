@@ -16,7 +16,7 @@ import { Separator } from "./ui/separator"
 export default function ServerCardInline({ now, serverInfo }: { now: number; serverInfo: NezhaServer }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const cardOpacityClass = useCardOpacity()
+  const cardOpacityStyle = useCardOpacity()
   const { name, country_code, online, cpu, up, down, mem, stg, platform, uptime, net_in_transfer, net_out_transfer, public_note } = formatNezhaInfo(
     now,
     serverInfo,
@@ -35,10 +35,8 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
   return online ? (
     <section>
       <Card
-        className={cn(
-          "flex items-center lg:flex-row justify-start gap-3 p-3 md:px-5 cursor-pointer hover:bg-accent/50 transition-colors min-w-[900px] w-full",
-          cardOpacityClass,
-        )}
+        className="flex items-center lg:flex-row justify-start gap-3 p-3 md:px-5 cursor-pointer hover:bg-accent/50 transition-colors min-w-[900px] w-full"
+        style={cardOpacityStyle}
         onClick={cardClick}
       >
         <section className={cn("grid items-center gap-2 lg:w-36")} style={{ gridTemplateColumns: "auto auto 1fr" }}>
@@ -117,10 +115,8 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
     </section>
   ) : (
     <Card
-      className={cn(
-        "flex  min-h-[61px] min-w-[900px] items-center justify-start p-3 md:px-5 flex-row cursor-pointer hover:bg-accent/50 transition-colors",
-        cardOpacityClass,
-      )}
+      className="flex  min-h-[61px] min-w-[900px] items-center justify-start p-3 md:px-5 flex-row cursor-pointer hover:bg-accent/50 transition-colors"
+      style={cardOpacityStyle}
       onClick={cardClick}
     >
       <section className={cn("grid items-center gap-2 w-40")} style={{ gridTemplateColumns: "auto auto 1fr" }}>

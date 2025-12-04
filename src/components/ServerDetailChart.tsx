@@ -2,11 +2,12 @@ import { Card, CardContent } from "@/components/ui/card"
 import { ChartConfig, ChartContainer } from "@/components/ui/chart"
 import { useWebSocketContext } from "@/hooks/use-websocket-context"
 import { formatBytes } from "@/lib/format"
-import { cn, formatNezhaInfo, formatRelativeTime } from "@/lib/utils"
+import { formatNezhaInfo, formatRelativeTime } from "@/lib/utils"
 import { NezhaServer, NezhaWebsocketResponse } from "@/types/nezha-api"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Area, AreaChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
+import { useCardOpacity } from "@/hooks/use-card-opacity"
 
 import { ServerDetailChartLoading } from "./loading/ServerDetailLoading"
 import AnimatedCircularProgressBar from "./ui/animated-circular-progress-bar"
@@ -128,7 +129,7 @@ function GpuChart({
   const hasInitialized = useRef(false)
   const [historyLoaded, setHistoryLoaded] = useState(false)
 
-  const customBackgroundImage = (window.CustomBackgroundImage as string) !== "" ? window.CustomBackgroundImage : undefined
+  const cardOpacityStyle = useCardOpacity()
 
   // 初始化历史数据
   useEffect(() => {
@@ -182,9 +183,7 @@ function GpuChart({
 
   return (
     <Card
-      className={cn({
-        "bg-card/70": customBackgroundImage,
-      })}
+      style={cardOpacityStyle}
     >
       <CardContent className="px-6 py-3">
         <section className="flex flex-col gap-1">
@@ -235,7 +234,7 @@ function CpuChart({ now, data, messageHistory }: { now: number; data: NezhaServe
 
   const { cpu } = formatNezhaInfo(now, data)
 
-  const customBackgroundImage = (window.CustomBackgroundImage as string) !== "" ? window.CustomBackgroundImage : undefined
+  const cardOpacityStyle = useCardOpacity()
 
   // 初始化历史数据
   useEffect(() => {
@@ -290,9 +289,7 @@ function CpuChart({ now, data, messageHistory }: { now: number; data: NezhaServe
 
   return (
     <Card
-      className={cn({
-        "bg-card/70": customBackgroundImage,
-      })}
+      style={cardOpacityStyle}
     >
       <CardContent className="px-6 py-3">
         <section className="flex flex-col gap-1">
@@ -339,7 +336,7 @@ function ProcessChart({ now, data, messageHistory }: { now: number; data: NezhaS
   const hasInitialized = useRef(false)
   const [historyLoaded, setHistoryLoaded] = useState(false)
 
-  const customBackgroundImage = (window.CustomBackgroundImage as string) !== "" ? window.CustomBackgroundImage : undefined
+  const cardOpacityStyle = useCardOpacity()
 
   const { process } = formatNezhaInfo(now, data)
 
@@ -396,9 +393,7 @@ function ProcessChart({ now, data, messageHistory }: { now: number; data: NezhaS
 
   return (
     <Card
-      className={cn({
-        "bg-card/70": customBackgroundImage,
-      })}
+      style={cardOpacityStyle}
     >
       <CardContent className="px-6 py-3">
         <section className="flex flex-col gap-1">
@@ -451,7 +446,7 @@ function MemChart({ now, data, messageHistory }: { now: number; data: NezhaServe
   const hasInitialized = useRef(false)
   const [historyLoaded, setHistoryLoaded] = useState(false)
 
-  const customBackgroundImage = (window.CustomBackgroundImage as string) !== "" ? window.CustomBackgroundImage : undefined
+  const cardOpacityStyle = useCardOpacity()
 
   const { mem, swap } = formatNezhaInfo(now, data)
 
@@ -512,9 +507,7 @@ function MemChart({ now, data, messageHistory }: { now: number; data: NezhaServe
 
   return (
     <Card
-      className={cn({
-        "bg-card/70": customBackgroundImage,
-      })}
+      style={cardOpacityStyle}
     >
       <CardContent className="px-6 py-3">
         <section className="flex flex-col gap-1">
@@ -594,7 +587,7 @@ function DiskChart({ now, data, messageHistory }: { now: number; data: NezhaServ
   const hasInitialized = useRef(false)
   const [historyLoaded, setHistoryLoaded] = useState(false)
 
-  const customBackgroundImage = (window.CustomBackgroundImage as string) !== "" ? window.CustomBackgroundImage : undefined
+  const cardOpacityStyle = useCardOpacity()
 
   const { disk } = formatNezhaInfo(now, data)
 
@@ -651,9 +644,7 @@ function DiskChart({ now, data, messageHistory }: { now: number; data: NezhaServ
 
   return (
     <Card
-      className={cn({
-        "bg-card/70": customBackgroundImage,
-      })}
+      style={cardOpacityStyle}
     >
       <CardContent className="px-6 py-3">
         <section className="flex flex-col gap-1">
@@ -705,7 +696,7 @@ function NetworkChart({ now, data, messageHistory }: { now: number; data: NezhaS
   const hasInitialized = useRef(false)
   const [historyLoaded, setHistoryLoaded] = useState(false)
 
-  const customBackgroundImage = (window.CustomBackgroundImage as string) !== "" ? window.CustomBackgroundImage : undefined
+  const cardOpacityStyle = useCardOpacity()
 
   const { up, down } = formatNezhaInfo(now, data)
 
@@ -772,9 +763,7 @@ function NetworkChart({ now, data, messageHistory }: { now: number; data: NezhaS
 
   return (
     <Card
-      className={cn({
-        "bg-card/70": customBackgroundImage,
-      })}
+      style={cardOpacityStyle}
     >
       <CardContent className="px-6 py-3">
         <section className="flex flex-col gap-1">
@@ -846,7 +835,7 @@ function ConnectChart({ now, data, messageHistory }: { now: number; data: NezhaS
   const hasInitialized = useRef(false)
   const [historyLoaded, setHistoryLoaded] = useState(false)
 
-  const customBackgroundImage = (window.CustomBackgroundImage as string) !== "" ? window.CustomBackgroundImage : undefined
+  const cardOpacityStyle = useCardOpacity()
 
   const { tcp, udp } = formatNezhaInfo(now, data)
 
@@ -907,9 +896,7 @@ function ConnectChart({ now, data, messageHistory }: { now: number; data: NezhaS
 
   return (
     <Card
-      className={cn({
-        "bg-card/70": customBackgroundImage,
-      })}
+      style={cardOpacityStyle}
     >
       <CardContent className="px-6 py-3">
         <section className="flex flex-col gap-1">

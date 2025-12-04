@@ -2,6 +2,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils"
 import React from "react"
 import { useTranslation } from "react-i18next"
+import { useCardOpacity } from "@/hooks/use-card-opacity"
 
 import { Separator } from "./ui/separator"
 
@@ -20,7 +21,7 @@ interface ServiceTrackerProps {
 
 export const ServiceTrackerClient: React.FC<ServiceTrackerProps> = ({ days, className, title, uptime = 100, avgDelay = 0 }) => {
   const { t } = useTranslation()
-  const customBackgroundImage = (window.CustomBackgroundImage as string) !== "" ? window.CustomBackgroundImage : undefined
+  const cardOpacityStyle = useCardOpacity()
 
   const getUptimeColor = (uptime: number) => {
     if (uptime >= 99) return "text-emerald-500"
@@ -45,10 +46,8 @@ export const ServiceTrackerClient: React.FC<ServiceTrackerProps> = ({ days, clas
       className={cn(
         "w-full space-y-3 bg-white px-4 py-4  rounded-lg border bg-card text-card-foreground shadow-lg shadow-neutral-200/40 dark:shadow-none",
         className,
-        {
-          "bg-card/70": customBackgroundImage,
-        },
       )}
+      style={cardOpacityStyle}
     >
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
