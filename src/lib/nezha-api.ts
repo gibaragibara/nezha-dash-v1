@@ -7,7 +7,9 @@ import { getKomariNodes, uuidToNumber } from "./utils"
 //let lastestRefreshTokenAt = 0
 
 export const fetchServerGroup = async (): Promise<ServerGroupResponse> => {
+  console.time('[Performance] API - fetchServerGroup')
   const kmNodes: Record<string, any> = await getKomariNodes()
+  console.log('[Performance] getKomariNodes completed')
 
   if (kmNodes?.error) {
     throw new Error(kmNodes.error)
@@ -36,6 +38,7 @@ export const fetchServerGroup = async (): Promise<ServerGroupResponse> => {
       })),
     ],
   }
+  console.timeEnd('[Performance] API - fetchServerGroup')
   return data
 }
 
@@ -158,7 +161,9 @@ export const fetchService = async (): Promise<ServiceResponse> => {
 }
 
 export const fetchSetting = async (): Promise<SettingResponse> => {
+  console.time('[Performance] API - fetchSetting')
   const km_public = await SharedClient().call("common:getPublicInfo")
+  console.log('[Performance] getPublicInfo completed')
   if (km_public.error) {
     throw new Error(km_public.error)
   }
@@ -177,6 +182,7 @@ export const fetchSetting = async (): Promise<SettingResponse> => {
       version: km_version.version || "unknown",
     },
   }
+  console.timeEnd('[Performance] API - fetchSetting')
   return km_data
 }
 
