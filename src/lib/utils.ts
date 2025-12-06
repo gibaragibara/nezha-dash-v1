@@ -404,7 +404,7 @@ function buildPublicNoteFromNode(server: any, existingPublicNote?: string): stri
     const amount: string =
       server?.price != null && server?.price !== 0
         ? server?.currency
-          ? `${server.price == -1 ? "" :server.currency}${server.price == -1 ? "0" : server.price}`
+          ? `${server.price == -1 ? "" : server.currency}${server.price == -1 ? "0" : server.price}`
           : String(server.price)
         : ""
 
@@ -440,7 +440,7 @@ function buildPublicNoteFromNode(server: any, existingPublicNote?: string): stri
         autoRenewal: existing?.billingDataMod?.autoRenewal || autoRenewal,
         cycle: existing?.billingDataMod?.cycle || cycle === "-1" ? "" : cycle,
         amount: existing?.billingDataMod?.amount || amount,
-      }:null,
+      } : null,
       planDataMod: {
         bandwidth: existing?.planDataMod?.bandwidth || "",
         // 当 traffic_limit==0 时，不从节点写入流量信息
@@ -555,43 +555,43 @@ export const komariToNezhaWebsocketResponse = (data: any): NezhaWebsocketRespons
 
     const state = status
       ? {
-          cpu: status.cpu || 0,
-          mem_used: status.ram || 0,
-          swap_used: status.swap || 0,
-          disk_used: status.disk || 0,
-          net_in_transfer: status.net_total_down || 0,
-          net_out_transfer: status.net_total_up || 0,
-          net_in_speed: status.net_in || 0,
-          net_out_speed: status.net_out || 0,
-          uptime: status.uptime || 0,
-          load_1: status.load || 0,
-          load_5: status.load5 || 0,
-          load_15: status.load15 || 0,
-          tcp_conn_count: status.connections || 0,
-          udp_conn_count: status.connections_udp || 0,
-          process_count: status.process || 0,
-          temperatures: status.temp > 0 ? [{ Name: "CPU", Temperature: status.temp }] : [],
-          gpu: server.gpu_name && typeof status.gpu === "number" ? [status.gpu] : [],
-        }
+        cpu: status.cpu || 0,
+        mem_used: status.ram || 0,
+        swap_used: status.swap || 0,
+        disk_used: status.disk || 0,
+        net_in_transfer: status.net_total_down || 0,
+        net_out_transfer: status.net_total_up || 0,
+        net_in_speed: status.net_in || 0,
+        net_out_speed: status.net_out || 0,
+        uptime: status.uptime || 0,
+        load_1: status.load || 0,
+        load_5: status.load5 || 0,
+        load_15: status.load15 || 0,
+        tcp_conn_count: status.connections || 0,
+        udp_conn_count: status.connections_udp || 0,
+        process_count: status.process || 0,
+        temperatures: status.temp > 0 ? [{ Name: "CPU", Temperature: status.temp }] : [],
+        gpu: server.gpu_name && typeof status.gpu === "number" ? [status.gpu] : [],
+      }
       : {
-          cpu: 0,
-          mem_used: 0,
-          swap_used: 0,
-          disk_used: 0,
-          net_in_transfer: 0,
-          net_out_transfer: 0,
-          net_in_speed: 0,
-          net_out_speed: 0,
-          uptime: 0,
-          load_1: 0,
-          load_5: 0,
-          load_15: 0,
-          tcp_conn_count: 0,
-          udp_conn_count: 0,
-          process_count: 0,
-          temperatures: [],
-          gpu: [],
-        }
+        cpu: 0,
+        mem_used: 0,
+        swap_used: 0,
+        disk_used: 0,
+        net_in_transfer: 0,
+        net_out_transfer: 0,
+        net_in_speed: 0,
+        net_out_speed: 0,
+        uptime: 0,
+        load_1: 0,
+        load_5: 0,
+        load_15: 0,
+        tcp_conn_count: 0,
+        udp_conn_count: 0,
+        process_count: 0,
+        temperatures: [],
+        gpu: [],
+      }
 
     const processedTag = server.tags ? sanitizeTags(String(server.tags)) : undefined
     return {
@@ -660,7 +660,7 @@ export const komariToNezhaWebsocketResponse = (data: any): NezhaWebsocketRespons
   }
 }
 
-let __nodesCache__ : any = null
+let __nodesCache__: any = null
 let __nodesCachePromise__: Promise<any> | null = null
 export const getKomariNodes = async () => {
   // 命中缓存，直接返回
@@ -695,4 +695,43 @@ export const getKomariNodes = async () => {
     })
 
   return __nodesCachePromise__
+}
+
+/**
+ * 计算流量使用百分比
+ * @param trafficLimit 流量限制(字节)
+ * @param trafficType 流量类型: "up"上传 | "down"下载 | "sum"总和 | "min"最小值 | "max"最大值
+ * @param netTotalUp 总上传流量(字节)
+ * @param netTotalDown 总下载流量(字节)
+ * @returns 流量使用百分比(0-100)
+ */
+export function calculateTrafficPercentage(
+  trafficLimit: number,
+  trafficType: string,
+  netTotalUp: number,
+  netTotalDown: number
+): number {
+  if (!trafficLimit || trafficLimit === 0) return 0
+
+  let usedTraffic = 0
+  switch (trafficType?.toLowerCase()) {
+    case "up":
+      usedTraffic = netTotalUp
+      break
+    case "down":
+      usedTraffic = netTotalDown
+      break
+    case "sum":
+      usedTraffic = netTotalUp + netTotalDown
+      break
+    case "min":
+      usedTraffic = Math.min(netTotalUp, netTotalDown)
+      break
+    case "max":
+    default:
+      usedTraffic = Math.max(netTotalUp, netTotalDown)
+      break
+  }
+
+  return (usedTraffic / trafficLimit) * 100
 }

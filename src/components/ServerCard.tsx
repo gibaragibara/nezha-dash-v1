@@ -13,7 +13,7 @@ import { Card } from "./ui/card"
 export default function ServerCard({ now, serverInfo }: { now: number; serverInfo: NezhaServer }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { name, country_code, online, cpu, up, down, mem, stg, public_note, platform, tcp, udp, tag } = formatNezhaInfo(
+  const { name, country_code, online, cpu, up, down, mem, stg, public_note, platform, tcp, udp, tag, net_out_transfer, net_in_transfer } = formatNezhaInfo(
     now,
     serverInfo,
   )
@@ -60,7 +60,7 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
               "lg:hidden": fixedTopServerName,
             })}
           >
-            {parsedData?.billingDataMod && <BillingInfo parsedData={parsedData} />}
+            {parsedData?.billingDataMod && <BillingInfo parsedData={parsedData} netTotalUp={net_out_transfer} netTotalDown={net_in_transfer} />}
           </div>
         </div>
       </section>
@@ -69,7 +69,7 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
           "lg:flex": fixedTopServerName,
         })}
       >
-        {parsedData?.billingDataMod && <BillingInfo parsedData={parsedData} />}
+        {parsedData?.billingDataMod && <BillingInfo parsedData={parsedData} netTotalUp={net_out_transfer} netTotalDown={net_in_transfer} />}
       </div>
       <div className="flex flex-col lg:items-start items-center gap-2">
         <section className={cn("flex items-center gap-1")}>
@@ -203,7 +203,7 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
               "lg:hidden": fixedTopServerName,
             })}
           >
-            {parsedData?.billingDataMod && <BillingInfo parsedData={parsedData} />}
+            {parsedData?.billingDataMod && <BillingInfo parsedData={parsedData} netTotalUp={net_out_transfer} netTotalDown={net_in_transfer} />}
           </div>
         </div>
       </section>
@@ -212,7 +212,7 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
           "lg:flex": fixedTopServerName,
         })}
       >
-        {parsedData?.billingDataMod && <BillingInfo parsedData={parsedData} />}
+        {parsedData?.billingDataMod && <BillingInfo parsedData={parsedData} netTotalUp={net_out_transfer} netTotalDown={net_in_transfer} />}
       </div>
       <section className="flex gap-1 items-center flex-wrap mt-0.5">
         {parsedData?.planDataMod && (

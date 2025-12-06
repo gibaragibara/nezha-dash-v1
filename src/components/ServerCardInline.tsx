@@ -15,7 +15,7 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
   const { t } = useTranslation()
   const navigate = useNavigate()
   const cardOpacityStyle = useCardOpacity()
-  const { name, country_code, online, cpu, up, down, mem, stg, platform, uptime, public_note, tcp, udp, tag } = formatNezhaInfo(
+  const { name, country_code, online, cpu, up, down, mem, stg, platform, uptime, public_note, tcp, udp, tag, net_out_transfer, net_in_transfer } = formatNezhaInfo(
     now,
     serverInfo,
   )
@@ -44,7 +44,7 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
           </div>
           <div className="relative w-28 flex flex-col">
             <p className={cn("break-normal font-bold tracking-tight", showFlag ? "text-xs " : "text-sm")}>{name}</p>
-            {parsedData?.billingDataMod && <BillingInfo parsedData={parsedData} />}
+            {parsedData?.billingDataMod && <BillingInfo parsedData={parsedData} netTotalUp={net_out_transfer} netTotalDown={net_in_transfer} />}
           </div>
         </section>
         <Separator orientation="vertical" className="h-8 mx-0 ml-2" />
@@ -170,7 +170,7 @@ export default function ServerCardInline({ now, serverInfo }: { now: number; ser
         </div>
         <div className="relative flex flex-col">
           <p className={cn("break-normal font-bold w-28 tracking-tight", showFlag ? "text-xs" : "text-sm")}>{name}</p>
-          {parsedData?.billingDataMod && <BillingInfo parsedData={parsedData} />}
+          {parsedData?.billingDataMod && <BillingInfo parsedData={parsedData} netTotalUp={net_out_transfer} netTotalDown={net_in_transfer} />}
         </div>
       </section>
       <Separator orientation="vertical" className="h-8 ml-3 lg:ml-1 mr-3" />
