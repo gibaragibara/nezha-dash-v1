@@ -56,12 +56,12 @@ const MainApp: React.FC = () => {
   // 根据主题和设备类型获取背景图片URL
   const configBackgroundImage = useMemo(() => {
     const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)
-    
+
     // 选择桌面端或移动端背景
     const bgUrl = isMobile && config.backgroundImageMobile ? config.backgroundImageMobile : config.backgroundImage
-    
+
     if (!bgUrl) return ""
-    
+
     // 处理亮色|暗色模式分隔
     const urls = bgUrl.split("|").map((u) => u.trim())
     if (urls.length > 1) {
@@ -92,21 +92,23 @@ const MainApp: React.FC = () => {
     return <ErrorPage code={500} message={error.message} />
   }
 
-  if (!settingData) {
-    return null
-  }
+  // 性能优化：移除阻塞代码，允许页面先渲染
+  // if (!settingData) return null  // 删除这行，避免 6.6 秒白屏
 
   if (settingData?.data?.config?.custom_code && !isCustomCodeInjected) {
     return null
   }
 
-  if (settingData?.data?.config?.language && !localStorage.getItem("language")) {
-    i18n.changeLanguage(settingData?.data?.config?.language)
-  }
+  // 性能优化：异步应用语言设置
+  useEffect(() => {
+    if (settingData?.data?.config?.language && !localStorage.getItem("language")) {
+      i18n.changeLanguage(settingData.data.config.language)
+    }
+  }, [settingData, i18n])
 
   // 合并自定义背景和配置背景，优先使用自定义背景
   const finalBackgroundImage = customBackgroundImage || configBackgroundImage
-  
+
   // 解析背景对齐方式
   const backgroundAlignment = config.backgroundAlignment || "cover,center"
   const [bgSize, bgPosition] = backgroundAlignment.split(",").map((s: string) => s.trim())
@@ -117,7 +119,7 @@ const MainApp: React.FC = () => {
       {finalBackgroundImage && (
         <div
           className={cn("fixed inset-0 z-0 min-h-lvh bg-no-repeat dark:brightness-75")}
-          style={{ 
+          style={{
             backgroundImage: `url(${finalBackgroundImage})`,
             backgroundSize: bgSize || "cover",
             backgroundPosition: bgPosition || "center"

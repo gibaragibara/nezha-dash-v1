@@ -4,32 +4,48 @@ import { countryCoordinates } from "@/lib/geo-limit"
 import { cn, formatNezhaInfo } from "@/lib/utils"
 import { NezhaServer } from "@/types/nezha-api"
 import { geoEquirectangular, geoPath } from "d3-geo"
+import React, { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 
 import MapTooltip from "./MapTooltip"
 
+// 性能监控：GeoJSON 解析
+console.time('[Performance] GeoJSON Parse')
+const geoJson = JSON.parse(geoJsonString)
+const filteredFeatures = geoJson.features.filter((feature: { properties: { iso_a3_eh: string } }) => feature.properties.iso_a3_eh !== "")
+console.timeEnd('[Performance] GeoJSON Parse')
+console.log('[Performance] GeoJSON size:', geoJsonString.length, 'bytes')
+console.log('[Performance] Filtered features count:', filteredFeatures.length)
+
 export default function GlobalMap({ serverList, now }: { serverList: NezhaServer[]; now: number }) {
+  console.time('[Performance] GlobalMap Render')
   const { t } = useTranslation()
-  const countryList: string[] = []
-  const serverCounts: { [key: string]: number } = {}
 
   const customBackgroundImage = (window.CustomBackgroundImage as string) !== "" ? window.CustomBackgroundImage : undefined
 
-  serverList.forEach((server) => {
-    if (server.country_code) {
-      const countryCode = server.country_code.toUpperCase()
-      if (!countryList.includes(countryCode)) {
-        countryList.push(countryCode)
+  // 使用 useMemo 缓存国家列表和服务器统计
+  const { countryList, serverCounts } = useMemo(() => {
+    const countries: string[] = []
+    const counts: { [key: string]: number } = {}
+
+    serverList.forEach((server) => {
+      if (server.country_code) {
+        const countryCode = server.country_code.toUpperCase()
+        if (!countries.includes(countryCode)) {
+          countries.push(countryCode)
+        }
+        counts[countryCode] = (counts[countryCode] || 0) + 1
       }
-      serverCounts[countryCode] = (serverCounts[countryCode] || 0) + 1
-    }
-  })
+    })
+
+    return { countryList: countries, serverCounts: counts }
+  }, [serverList])
 
   const width = 900
   const height = 500
 
-  const geoJson = JSON.parse(geoJsonString)
-  const filteredFeatures = geoJson.features.filter((feature: { properties: { iso_a3_eh: string } }) => feature.properties.iso_a3_eh !== "")
+  console.log('[Performance] GlobalMap - countries:', countryList.length, 'servers:', serverList.length)
+  console.timeEnd('[Performance] GlobalMap Render')
 
   return (
     <section
@@ -72,7 +88,7 @@ interface InteractiveMapProps {
   now: number
 }
 
-export function InteractiveMap({ countries, serverCounts, width, height, filteredFeatures, nezhaServerList, now }: InteractiveMapProps) {
+export const InteractiveMap = React.memo(function InteractiveMap({ countries, serverCounts, width, height, filteredFeatures, nezhaServerList, now }: InteractiveMapProps) {
   const { setTooltipData } = useTooltip()
 
   const projection = geoEquirectangular()
@@ -181,4 +197,4 @@ export function InteractiveMap({ countries, serverCounts, width, height, filtere
       <MapTooltip />
     </div>
   )
-}
+})
