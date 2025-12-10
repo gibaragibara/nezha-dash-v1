@@ -125,7 +125,11 @@
     "days": "天",
     "price": "价格",
     "free": "免费",
-    "usage-baseed": "按量计费"
+    "usage-baseed": "按量计费",
+    "totalAssets": "全网剩余价值",
+    "subscriptionExpiry": "订阅到期",
+    "trafficRemaining": "流量剩余",
+    "servers": "台"
   },
   "TypeCommand": "输入命令或搜索",
   "NoResults": "结果为空",
