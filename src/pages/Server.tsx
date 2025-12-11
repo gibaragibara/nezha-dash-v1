@@ -4,7 +4,6 @@ import ServerCard from "@/components/ServerCard"
 import ServerCardInline from "@/components/ServerCardInline"
 import ServerOverview from "@/components/ServerOverview"
 import { ServiceTracker } from "@/components/ServiceTracker"
-import TotalBillingCard from "@/components/TotalBillingCard"
 import { Loader } from "@/components/loading/Loader"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -236,10 +235,6 @@ export default function Servers() {
         upSpeed={upSpeed}
         downSpeed={downSpeed}
       />
-      {/* 账单信息卡片 */}
-      <div className="mt-4">
-        <TotalBillingCard servers={nezhaWsData?.servers || []} />
-      </div>
       <div className="flex mt-6 items-center justify-between gap-2 server-overview-controls">
         <section className="flex items-center gap-2 w-full overflow-hidden">
           <button
