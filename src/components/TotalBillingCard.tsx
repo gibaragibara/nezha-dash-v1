@@ -31,11 +31,21 @@ export default function TotalBillingCard({ servers }: TotalBillingCardProps) {
             // 跳过永久订阅和无效数据
             if (endDate.startsWith("0000-00-00")) return
 
+            // 识别货币符号并转换汇率
+            let currencyRate = 1 // 默认人民币
+            if (amountStr.includes("$") || amountStr.includes("USD")) {
+                currencyRate = 7.2 // 美元转人民币
+            } else if (amountStr.includes("€") || amountStr.includes("EUR")) {
+                currencyRate = 7.8 // 欧元转人民币
+            } else if (amountStr.includes("£") || amountStr.includes("GBP")) {
+                currencyRate = 9.1 // 英镑转人民币
+            }
+
             // 提取价格数字部分（支持 "¥100" 或 "$100" 或 "100" 格式）
             const amountMatch = amountStr.match(/[\d.]+/)
             if (!amountMatch) return
 
-            const price = parseFloat(amountMatch[0])
+            const price = parseFloat(amountMatch[0]) * currencyRate
             if (isNaN(price) || price <= 0) return
 
             try {
@@ -147,37 +157,37 @@ export default function TotalBillingCard({ servers }: TotalBillingCardProps) {
     })
 
     return (
-        <Card className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-600/10 to-purple-600/10 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-800">
+        <Card className="flex items-center gap-4 p-4 bg-card border-border">
             {/* 左侧图标 */}
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-600 dark:bg-blue-700">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-600/20 dark:bg-blue-500/20">
+                <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             </div>
 
             {/* 信息区块 */}
-            <div className="flex flex-1 flex-col sm:flex-row gap-4 sm:gap-8">
-                {/* 全网资产总额 */}
+            <div className="flex flex-1 flex-col sm:flex-row gap-3 sm:gap-6">
+                {/* 全网剩余价值 */}
                 <div className="flex flex-col">
-                    <p className="text-xs text-muted-foreground mb-1">{t("billingInfo.totalAssets")}</p>
-                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    <p className="text-xs text-muted-foreground mb-0.5">{t("billingInfo.totalAssets")}</p>
+                    <p className="text-xl font-bold text-foreground">
                         ¥{totalRemainingValue.toFixed(2)}
                     </p>
                 </div>
 
                 {/* 订阅到期 */}
                 <div className="flex flex-col">
-                    <p className="text-xs text-muted-foreground mb-1">{t("billingInfo.subscriptionExpiry")}</p>
+                    <p className="text-xs text-muted-foreground mb-0.5">{t("billingInfo.subscriptionExpiry")}</p>
                     <div className="flex items-baseline gap-1">
-                        <p className="text-2xl font-bold">{expiringServersCount}</p>
+                        <p className="text-xl font-bold text-foreground">{expiringServersCount}</p>
                         <p className="text-sm text-muted-foreground">{t("billingInfo.servers")}</p>
                     </div>
                 </div>
 
                 {/* 流量剩余 */}
                 <div className="flex flex-col">
-                    <p className="text-xs text-muted-foreground mb-1">{t("billingInfo.trafficRemaining")}</p>
-                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    <p className="text-xs text-muted-foreground mb-0.5">{t("billingInfo.trafficRemaining")}</p>
+                    <p className="text-xl font-bold text-green-600 dark:text-green-400">
                         {formatBytes(totalTrafficRemaining)}
                     </p>
                 </div>
