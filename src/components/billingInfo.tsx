@@ -16,7 +16,6 @@ export default function BillingInfo({ parsedData, netTotalUp = 0, netTotalDown =
     return null
   }
 
-  let isNeverExpire = false
   let daysLeftObject = {
     days: 0,
     cycleLabel: "",
@@ -24,9 +23,7 @@ export default function BillingInfo({ parsedData, netTotalUp = 0, netTotalDown =
   }
 
   if (parsedData?.billingDataMod?.endDate) {
-    if (parsedData.billingDataMod.endDate.startsWith("0000-00-00")) {
-      isNeverExpire = true
-    } else {
+    if (!parsedData.billingDataMod.endDate.startsWith("0000-00-00")) {
       try {
         daysLeftObject = getDaysBetweenDatesWithAutoRenewal(parsedData.billingDataMod)
       } catch (error) {
@@ -117,11 +114,7 @@ export default function BillingInfo({ parsedData, netTotalUp = 0, netTotalDown =
           </div>
           {trafficLimit > 0 && <RemainPercentBar className="mt-0.5" value={trafficPercentage} />}
         </>
-      ) : (
-        <div className={cn("text-[10px] text-muted-foreground")}>
-          {t("billingInfo.remaining")}: {isNeverExpire ? t("billingInfo.indefinite") : daysLeftObject.days + " " + t("billingInfo.days")}
-        </div>
-      )}
+      ) : null}
     </>
   ) : (
     <>

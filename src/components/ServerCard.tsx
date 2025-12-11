@@ -1,7 +1,7 @@
 import ServerFlag from "@/components/ServerFlag"
 import ServerUsageBar from "@/components/ServerUsageBar"
 import { GetFontLogoClass, GetOsName, MageMicrosoftWindows } from "@/lib/logo-class"
-import { cn, formatNezhaInfo, parsePublicNote } from "@/lib/utils"
+import { cn, formatNezhaInfo, parsePublicNote, getDaysBetweenDatesWithAutoRenewal } from "@/lib/utils"
 import { NezhaServer } from "@/types/nezha-api"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
@@ -125,6 +125,34 @@ export default function ServerCard({ now, serverInfo }: { now: number; serverInf
           </div>
         </section>
         <section className="flex gap-1 items-center flex-wrap mt-0.5">
+          {/* 剩余天数标签 - 放在最前面 */}
+          {parsedData?.billingDataMod?.endDate && (() => {
+            if (parsedData.billingDataMod.endDate.startsWith("0000-00-00")) {
+              return (
+                <p className="text-[9px] bg-cyan-600 text-cyan-200 dark:bg-cyan-800 dark:text-cyan-300 w-fit rounded-[5px] px-[3px] py-[1.5px]">
+                  {t("billingInfo.indefinite")}
+                </p>
+              )
+            }
+            try {
+              const daysLeftObject = getDaysBetweenDatesWithAutoRenewal(parsedData.billingDataMod)
+              if (daysLeftObject.days >= 0) {
+                return (
+                  <p className="text-[9px] bg-orange-600 text-orange-200 dark:bg-orange-800 dark:text-orange-300 w-fit rounded-[5px] px-[3px] py-[1.5px]">
+                    {daysLeftObject.days}{t("billingInfo.days")}
+                  </p>
+                )
+              } else {
+                return (
+                  <p className="text-[9px] bg-red-600 text-red-200 dark:bg-red-800 dark:text-red-300 w-fit rounded-[5px] px-[3px] py-[1.5px]">
+                    {t("billingInfo.expired")} {daysLeftObject.days * -1}{t("billingInfo.days")}
+                  </p>
+                )
+              }
+            } catch (error) {
+              return null
+            }
+          })()}
           {parsedData?.planDataMod && (
             <>
               {parsedData.planDataMod.bandwidth !== "" && (
