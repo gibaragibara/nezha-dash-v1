@@ -607,52 +607,8 @@ export const komariToNezhaWebsocketResponse = (data: any): NezhaWebsocketRespons
     }
   })
 
-  // 追加那些仅在 data 里出现但缓存里没有的新服务器（保证“出现过的都显示”）
-  for (const [uuid, status] of statusMap.entries()) {
-    const host = {
-      platform: status.os || "",
-      platform_version: status.kernel_version || "",
-      cpu: status.cpu_name ? [status.cpu_name] : [],
-      gpu: status.gpu_name ? [status.gpu_name] : [],
-      mem_total: status.ram_total || 0,
-      disk_total: status.disk_total || 0,
-      swap_total: status.swap_total || 0,
-      arch: status.arch || "",
-      boot_time: new Date(status.time).getTime() / 1000 - (status.uptime || 0),
-      version: "",
-    }
-
-    const state = {
-      cpu: status.cpu || 0,
-      mem_used: status.ram || 0,
-      swap_used: status.swap || 0,
-      disk_used: status.disk || 0,
-      net_in_transfer: status.net_total_down || 0,
-      net_out_transfer: status.net_total_up || 0,
-      net_in_speed: status.net_in || 0,
-      net_out_speed: status.net_out || 0,
-      uptime: status.uptime || 0,
-      load_1: status.load || 0,
-      load_5: status.load5 || 0,
-      load_15: status.load15 || 0,
-      tcp_conn_count: status.connections || 0,
-      udp_conn_count: status.connections_udp || 0,
-      process_count: status.process || 0,
-      temperatures: status.temp > 0 ? [{ Name: "CPU", Temperature: status.temp }] : [],
-      gpu: typeof status.gpu === "number" ? [status.gpu] : [],
-    }
-
-    servers.push({
-      id: uuidToNumber(uuid),
-      name: status.name || uuid,
-      public_note: "",
-      last_active: status.time,
-      country_code: status.region ? countryFlagToCode(status.region) : "",
-      display_index: 0,
-      host,
-      state,
-    })
-  }
+  // 注意：不再追加那些只在实时状态数据中出现但不在配置列表中的服务器
+  // 这样可以确保在后台删除探针后，前端不会继续显示这些"幽灵探针"
 
   return {
     now: Date.now(),
