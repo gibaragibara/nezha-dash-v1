@@ -339,6 +339,9 @@ export const uuidToNumber = (uuid: string): number => {
 
 let km_servers_cache: any[] = []
 
+// 预编译颜色标签正则表达式（性能优化）
+const COLOR_PATTERN = /<\s*(?:Gray|Gold|Bronze|Brown|Yellow|Amber|Orange|Tomato|Red|Ruby|Crimson|Pink|Plum|Purple|Violet|Iris|Indigo|Blue|Cyan|Teal|Jade|Green|Grass|Lime|Mint|Sky)\s*>/ig
+
 const countryFlagToCode = (flag: string): string => {
   return [...flag].map((c) => String.fromCharCode(c.codePointAt(0)! - 127397 + 32)).join("")
 }
@@ -358,44 +361,35 @@ function deriveCycleLabel(billing_cycle?: number): string {
 
 // 清洗 tags：将分隔符 ";" 替换为空格，并移除颜色标签（不区分大小写）
 function sanitizeTags(tags: string): string {
-  const COLORS = [
-    "Gray",
-    "Gold",
-    "Bronze",
-    "Brown",
-    "Yellow",
-    "Amber",
-    "Orange",
-    "Tomato",
-    "Red",
-    "Ruby",
-    "Crimson",
-    "Pink",
-    "Plum",
-    "Purple",
-    "Violet",
-    "Iris",
-    "Indigo",
-    "Blue",
-    "Cyan",
-    "Teal",
-    "Jade",
-    "Green",
-    "Grass",
-    "Lime",
-    "Mint",
-    "Sky",
-  ]
-  const colorPattern = new RegExp(`<\\s*(?:${COLORS.join("|")})\\s*>`, "ig")
   return tags
     .split(";")
-    .map((part) => part.replace(colorPattern, "").trim())
+    .map((part) => part.replace(COLOR_PATTERN, "").trim())
     .filter(Boolean)
     .join(" ")
 }
 
+// buildPublicNoteFromNode 缓存（性能优化）
+// key: uuid, value: { cacheKey: string, result: string }
+const publicNoteCacheMap = new Map<string, { cacheKey: string; result: string }>()
+
+// 生成缓存 key，基于影响 public_note 的关键字段
+function getPublicNoteCacheKey(server: any, existingPublicNote?: string): string {
+  return `${server?.billing_cycle || ''}_${server?.auto_renewal || ''}_${server?.price || ''}_${server?.currency || ''}_${server?.expired_at || ''}_${server?.created_at || ''}_${server?.traffic_limit || ''}_${server?.traffic_limit_type || ''}_${server?.ipv4 || ''}_${server?.ipv6 || ''}_${server?.public_remark || ''}_${server?.tags || ''}_${existingPublicNote || ''}`
+}
+
 function buildPublicNoteFromNode(server: any, existingPublicNote?: string): string {
   try {
+    const uuid = server?.uuid
+    const cacheKey = getPublicNoteCacheKey(server, existingPublicNote)
+
+    // 检查缓存
+    if (uuid) {
+      const cached = publicNoteCacheMap.get(uuid)
+      if (cached && cached.cacheKey === cacheKey) {
+        return cached.result
+      }
+    }
+
     // 如果已有结构化的 public_note，先解析出来以便合并
     const existing = parsePublicNote(existingPublicNote || "") || undefined
     const bc: number = Number(server?.billing_cycle || 0)
@@ -454,7 +448,14 @@ function buildPublicNoteFromNode(server: any, existingPublicNote?: string): stri
       },
     }
 
-    return JSON.stringify(merged)
+    const result = JSON.stringify(merged)
+
+    // 保存到缓存
+    if (uuid) {
+      publicNoteCacheMap.set(uuid, { cacheKey, result })
+    }
+
+    return result
   } catch (e) {
     console.error("buildPublicNoteFromNode error:", e)
     return existingPublicNote || ""
@@ -466,66 +467,17 @@ export const komariToNezhaWebsocketResponse = (data: any): NezhaWebsocketRespons
     getKomariNodes()
       .then((res) => {
         km_servers_cache = Object.values(res || {})
+        // 当节点列表更新时，清空服务器静态信息缓存
+        serverStaticCache.clear()
       })
   }
 
-  // 如果还没有缓存，先按 data 渲染，避免首次为空
+  // 如果还没有缓存，先返回空数组，避免首次为空
   if (!km_servers_cache || km_servers_cache.length === 0) {
     return {
       now: Date.now(),
       servers: [],
     }
-    // const servers: any[] = Object.entries(data || {}).reduce((acc: any[], [uuid, status]: [string, any]) => {
-    //   const host = {
-    //     platform: status.os || "",
-    //     platform_version: status.kernel_version || "",
-    //     cpu: status.cpu_name ? [status.cpu_name] : [],
-    //     gpu: status.gpu_name ? [status.gpu_name] : [],
-    //     mem_total: status.ram_total || 0,
-    //     disk_total: status.disk_total || 0,
-    //     swap_total: status.swap_total || 0,
-    //     arch: status.arch || "",
-    //     boot_time: new Date(status.time).getTime() / 1000 - (status.uptime || 0),
-    //     version: "",
-    //   }
-
-    //   const state = {
-    //     cpu: status.cpu || 0,
-    //     mem_used: status.ram || 0,
-    //     swap_used: status.swap || 0,
-    //     disk_used: status.disk || 0,
-    //     net_in_transfer: status.net_total_down || 0,
-    //     net_out_transfer: status.net_total_up || 0,
-    //     net_in_speed: status.net_in || 0,
-    //     net_out_speed: status.net_out || 0,
-    //     uptime: status.uptime || 0,
-    //     load_1: status.load || 0,
-    //     load_5: status.load5 || 0,
-    //     load_15: status.load15 || 0,
-    //     tcp_conn_count: status.connections || 0,
-    //     udp_conn_count: status.connections_udp || 0,
-    //     process_count: status.process || 0,
-    //     temperatures: status.temp > 0 ? [{ Name: "CPU", Temperature: status.temp }] : [],
-    //     gpu: typeof status.gpu === "number" ? [status.gpu] : [],
-    //   }
-
-    //   acc.push({
-    //     id: uuidToNumber(uuid),
-    //     name: status.name || uuid,
-    //     public_note: "",
-    //     last_active: status.time,
-    //     country_code: status.region ? countryFlagToCode(status.region) : "",
-    //     display_index: 0,
-    //     host,
-    //     state,
-    //   })
-    //   return acc
-    // }, [])
-
-    // return {
-    //   now: Date.now(),
-    //   servers,
-    // }
   }
 
   // 按缓存列表展示；如果 data 中没有该 uuid，则视为离线
@@ -538,20 +490,35 @@ export const komariToNezhaWebsocketResponse = (data: any): NezhaWebsocketRespons
       statusMap.delete(uuid)
     }
 
-    const bootTime = status ? new Date(status.time).getTime() / 1000 - (status.uptime || 0) : 0
-
-    const host = {
-      platform: server.os,
-      platform_version: server.kernel_version,
-      cpu: [server.cpu_name],
-      gpu: server.gpu_name ? [server.gpu_name] : [],
-      mem_total: server.mem_total,
-      disk_total: server.disk_total,
-      swap_total: server.swap_total,
-      arch: server.arch,
-      boot_time: bootTime,
-      version: "",
+    // 获取或创建服务器静态信息缓存
+    let staticInfo = serverStaticCache.get(uuid)
+    if (!staticInfo) {
+      const processedTag = server.tags ? sanitizeTags(String(server.tags)) : undefined
+      staticInfo = {
+        id: uuidToNumber(uuid),
+        name: server.name,
+        tag: processedTag,
+        public_note: buildPublicNoteFromNode(server, server.public_remark || ""),
+        country_code: countryFlagToCode(server.region),
+        display_index: -server.weight || 0,
+        host: {
+          platform: server.os,
+          platform_version: server.kernel_version,
+          cpu: [server.cpu_name],
+          gpu: server.gpu_name ? [server.gpu_name] : [],
+          mem_total: server.mem_total,
+          disk_total: server.disk_total,
+          swap_total: server.swap_total,
+          arch: server.arch,
+          boot_time: 0, // 动态计算
+          version: "",
+        },
+      }
+      serverStaticCache.set(uuid, staticInfo)
     }
+
+    // 动态计算 boot_time（这是变化的部分）
+    const bootTime = status ? new Date(status.time).getTime() / 1000 - (status.uptime || 0) : 0
 
     const state = status
       ? {
@@ -573,36 +540,15 @@ export const komariToNezhaWebsocketResponse = (data: any): NezhaWebsocketRespons
         temperatures: status.temp > 0 ? [{ Name: "CPU", Temperature: status.temp }] : [],
         gpu: server.gpu_name && typeof status.gpu === "number" ? [status.gpu] : [],
       }
-      : {
-        cpu: 0,
-        mem_used: 0,
-        swap_used: 0,
-        disk_used: 0,
-        net_in_transfer: 0,
-        net_out_transfer: 0,
-        net_in_speed: 0,
-        net_out_speed: 0,
-        uptime: 0,
-        load_1: 0,
-        load_5: 0,
-        load_15: 0,
-        tcp_conn_count: 0,
-        udp_conn_count: 0,
-        process_count: 0,
-        temperatures: [],
-        gpu: [],
-      }
+      : OFFLINE_STATE
 
-    const processedTag = server.tags ? sanitizeTags(String(server.tags)) : undefined
     return {
-      id: uuidToNumber(uuid),
-      name: server.name,
-      tag: processedTag,
-      public_note: buildPublicNoteFromNode(server, server.public_remark || ""),
+      ...staticInfo,
       last_active: status ? status.time : "0000-00-00T00:00:00Z",
-      country_code: countryFlagToCode(server.region),
-      display_index: -server.weight || 0,
-      host,
+      host: {
+        ...staticInfo.host,
+        boot_time: bootTime,
+      },
       state,
     }
   })
@@ -615,6 +561,30 @@ export const komariToNezhaWebsocketResponse = (data: any): NezhaWebsocketRespons
     servers,
   }
 }
+
+// 服务器静态信息缓存（性能优化）
+const serverStaticCache = new Map<string, any>()
+
+// 离线状态常量（避免重复创建对象）
+const OFFLINE_STATE = Object.freeze({
+  cpu: 0,
+  mem_used: 0,
+  swap_used: 0,
+  disk_used: 0,
+  net_in_transfer: 0,
+  net_out_transfer: 0,
+  net_in_speed: 0,
+  net_out_speed: 0,
+  uptime: 0,
+  load_1: 0,
+  load_5: 0,
+  load_15: 0,
+  tcp_conn_count: 0,
+  udp_conn_count: 0,
+  process_count: 0,
+  temperatures: [],
+  gpu: [],
+})
 
 let __nodesCache__: any = null
 let __nodesCachePromise__: Promise<any> | null = null
