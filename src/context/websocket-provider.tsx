@@ -1,6 +1,6 @@
-import { SharedClient } from "@/hooks/use-rpc2"
 import { getKomariNodes, komariToNezhaWebsocketResponse } from "@/lib/utils"
-import React, { useEffect, useState, useRef, useCallback } from "react"
+import { getWsService } from "@/services/websocket-service"
+import React, { useEffect, useState, useRef } from "react"
 
 import { WebSocketContext, WebSocketContextType } from "./websocket-context"
 
@@ -9,37 +9,39 @@ interface WebSocketProviderProps {
   children: React.ReactNode
 }
 
-export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ url, children }) => {
+export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }) => {
   const [lastMessage, setLastMessage] = useState<{ data: string } | null>(null)
   const [messageHistory, setMessageHistory] = useState<{ data: string }[]>([])
   const [connected, setConnected] = useState(false)
   const [needReconnect, setNeedReconnect] = useState(false)
 
-  // 使用 ref 缓存已序列化的消息，避免重复序列化
-  const lastSerializedRef = useRef<string | null>(null)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // 使用 ref 避免重复初始化
   const isInitializedRef = useRef(false)
+  const lastSerializedRef = useRef<string | null>(null)
 
-  const getData = useCallback(() => {
-    const rpc2 = SharedClient()
-    const t0 = performance.now()
-    return rpc2.call("common:getNodesLatestStatus").then((res) => {
-      const t1 = performance.now()
-      console.log(`[NezhaPerf] getNodesLatestStatus RPC: ${(t1 - t0).toFixed(0)}ms`)
+  useEffect(() => {
+    // 避免 React StrictMode 重复初始化
+    if (isInitializedRef.current) return
+    isInitializedRef.current = true
 
-      const t2 = performance.now()
-      const nzwsres = komariToNezhaWebsocketResponse(res)
-      const t3 = performance.now()
-      console.log(`[NezhaPerf] komariToNezhaWebsocketResponse: ${(t3 - t2).toFixed(0)}ms`)
+    console.log("[WebSocketProvider] 初始化开始")
 
-      // 只序列化一次
+    // 先获取节点列表（缓存），以便后续转换数据时使用
+    getKomariNodes().then(() => {
+      console.log("[WebSocketProvider] 节点列表已缓存")
+    })
+
+    // 获取 WebSocket 服务实例
+    const wsService = getWsService()
+
+    // 订阅数据更新
+    const handleData = (data: any) => {
+      // 将 Komari 格式转换为 Nezha 格式
+      const nzwsres = komariToNezhaWebsocketResponse(data)
       const serialized = JSON.stringify(nzwsres)
-      const t4 = performance.now()
-      console.log(`[NezhaPerf] JSON.stringify: ${(t4 - t3).toFixed(0)}ms`)
-
       const messageObj = { data: serialized }
 
-      // 只有数据变化时才更新状态，减少不必要的渲染
+      // 只有数据变化时才更新状态
       if (serialized !== lastSerializedRef.current) {
         lastSerializedRef.current = serialized
         setLastMessage(messageObj)
@@ -48,200 +50,41 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ url, child
           return updated.slice(0, 30)
         })
       }
-      console.log(`[NezhaPerf] getData 总耗时: ${(t4 - t0).toFixed(0)}ms`)
-    }).catch((err) => {
-      console.error("获取节点状态失败:", err)
-    })
-  }, [])
 
-  useEffect(() => {
-    // 避免 React StrictMode 重复初始化
-    if (isInitializedRef.current) return
-    isInitializedRef.current = true
-
-    const initStart = performance.now()
-    console.log("[NezhaPerf] ===== 开始初始化 =====")
-
-    const rpc2 = SharedClient()
-
-    // 【关键修复】等待 WebSocket 连接成功后再获取数据
-    // 这样可以使用快速的 WebSocket 通道，而不是回退到慢的 HTTP
-    const waitForConnection = (): Promise<void> => {
-      return new Promise((resolve) => {
-        // 如果已经连接成功，直接返回
-        if (rpc2.state === 'connected') {
-          console.log("[NezhaPerf] WebSocket 已连接，立即开始获取数据")
-          resolve()
-          return
-        }
-
-        console.log(`[NezhaPerf] 等待 WebSocket 连接... (当前状态: ${rpc2.state})`)
-
-        // 设置一个监听器等待连接成功
-        const checkInterval = setInterval(() => {
-          if (rpc2.state === 'connected') {
-            clearInterval(checkInterval)
-            clearTimeout(timeout)
-            console.log("[NezhaPerf] WebSocket 连接成功，开始获取数据")
-            resolve()
-          }
-        }, 50) // 每 50ms 检查一次
-
-        // 设置超时，避免无限等待（2秒后无论如何都开始）
-        const timeout = setTimeout(() => {
-          clearInterval(checkInterval)
-          console.log(`[NezhaPerf] 等待超时，使用当前状态开始获取数据 (状态: ${rpc2.state})`)
-          resolve()
-        }, 2000)
-      })
-    }
-
-    // 先等待 WebSocket 连接，再获取数据
-    waitForConnection().then(() => {
-      const nodesStart = performance.now()
-      const statusStart = performance.now()
-
-      return Promise.all([
-        getKomariNodes().then(res => {
-          console.log(`[NezhaPerf] getKomariNodes (common:getNodes) 完成: ${(performance.now() - nodesStart).toFixed(0)}ms`)
-          return res
-        }),
-        rpc2.call("common:getNodesLatestStatus").then(res => {
-          console.log(`[NezhaPerf] getNodesLatestStatus 完成: ${(performance.now() - statusStart).toFixed(0)}ms`)
-          return res
-        })
-      ])
-    }).then(([_nodes, statusData]) => {
-      const parallelEnd = performance.now()
-      console.log(`[NezhaPerf] 并行请求总耗时: ${(parallelEnd - initStart).toFixed(0)}ms`)
-
-      // 节点列表已在 getKomariNodes 内部更新到 km_servers_cache
-      const convertStart = performance.now()
-      const nzwsres = komariToNezhaWebsocketResponse(statusData)
-      console.log(`[NezhaPerf] 首次数据转换: ${(performance.now() - convertStart).toFixed(0)}ms`)
-
-      const serialized = JSON.stringify(nzwsres)
-      const messageObj = { data: serialized }
-
-      lastSerializedRef.current = serialized
-      setLastMessage(messageObj)
-      setMessageHistory([messageObj])
-      setConnected(true)
-
-      console.log(`[NezhaPerf] ===== 初始化完成，总耗时: ${(performance.now() - initStart).toFixed(0)}ms =====`)
-      console.log(`[NezhaPerf] 服务器数量: ${nzwsres.servers?.length || 0}`)
-
-      // 设置定时轮询
-      intervalRef.current = setInterval(() => {
-        getData()
-      }, 2000)
-    }).catch((err) => {
-      console.error("初始化失败:", err)
-      // 即使失败也启动轮询，让后续请求可以重试
-      setConnected(true)
-      intervalRef.current = setInterval(() => {
-        getData()
-      }, 2000)
-    })
-
-    // 清理函数：组件卸载时清除定时器
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
+      // 收到第一条消息时标记为已连接
+      if (!connected) {
+        setConnected(true)
+        console.log(`[WebSocketProvider] 数据加载完成，服务器数量: ${nzwsres.servers?.length || 0}`)
       }
     }
-  }, [getData])
+
+    const unsubscribe = wsService.subscribe(handleData)
+
+    // 建立连接
+    wsService.connect()
+
+    // 清理函数
+    return () => {
+      unsubscribe()
+      wsService.disconnect()
+    }
+  }, [])
 
   const cleanup = () => {
     return
-    // 使用RPC2自动管理
-    // if (ws.current) {
-    //   // 移除所有事件监听器
-    //   ws.current.onopen = null
-    //   ws.current.onclose = null
-    //   ws.current.onmessage = null
-    //   ws.current.onerror = null
-
-    //   if (ws.current.readyState === WebSocket.OPEN || ws.current.readyState === WebSocket.CONNECTING) {
-    //     ws.current.close()
-    //   }
-    //   ws.current = null
-    // }
-    // if (reconnectTimeout.current) {
-    //   clearTimeout(reconnectTimeout.current)
-    //   reconnectTimeout.current = null
-    // }
-    // setConnected(false)
+    // 使用 WebSocketService 自动管理
   }
 
   const connect = () => {
     return
-    // 使用RPC2自动管理
-    // if (isConnecting.current) {
-    //   console.log("Connection already in progress")
-    //   return
-    // }
-
-    // cleanup()
-    // isConnecting.current = true
-
-    // try {
-    //   const wsUrl = new URL(url, window.location.origin)
-    //   wsUrl.protocol = wsUrl.protocol.replace("http", "ws")
-
-    //   ws.current = new WebSocket(wsUrl.toString())
-
-    //   ws.current.onopen = () => {
-    //     console.log("WebSocket connected")
-    //     setConnected(true)
-    //     reconnectAttempts.current = 0
-    //     isConnecting.current = false
-    //   }
-
-    //   ws.current.onclose = () => {
-    //     console.log("WebSocket disconnected")
-    //     setConnected(false)
-    //     ws.current = null
-    //     isConnecting.current = false
-
-    //     if (reconnectAttempts.current < maxReconnectAttempts) {
-    //       reconnectTimeout.current = setTimeout(() => {
-    //         reconnectAttempts.current++
-    //         connect()
-    //       }, 3000)
-    //     }
-    //   }
-
-    //   ws.current.onmessage = (event) => {
-    //     const newMessage = { data: event.data }
-    //     setLastMessage(newMessage)
-    //     // 更新历史消息，保持最新的30条记录
-    //     setMessageHistory((prev) => {
-    //       const updated = [newMessage, ...prev]
-    //       return updated.slice(0, 30)
-    //     })
-    //   }
-
-    //   ws.current.onerror = (error) => {
-    //     console.error("WebSocket error:", error)
-    //     isConnecting.current = false
-    //   }
-    // } catch (error) {
-    //   console.error("WebSocket connection error:", error)
-    //   isConnecting.current = false
-    // }
+    // 使用 WebSocketService 自动管理
   }
 
   const reconnect = () => {
-    return
-    // 使用RPC2自动管理
-    // reconnectAttempts.current = 0
-    // // 等待一个小延时确保清理完成
-    // cleanup()
-    // setTimeout(() => {
-    //   connect()
-    // }, 1000)
+    // 手动重连
+    const wsService = getWsService()
+    wsService.disconnect()
+    wsService.connect()
   }
 
   useEffect(() => {
@@ -258,7 +101,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ url, child
       cleanup()
       window.removeEventListener("beforeunload", handleBeforeUnload)
     }
-  }, [url])
+  }, [])
 
   const contextValue: WebSocketContextType = {
     lastMessage,

@@ -287,7 +287,6 @@ export class RPC2Client {
     // 如果启用了自动连接，且当前未连接，尝试建立连接（不阻塞使用 HTTP 回退）
     if (this.options.autoConnect &&
       this.connectionState === RPC2ConnectionState.DISCONNECTED) {
-      console.log(`[RPC2] ${method}: 触发自动连接, 当前状态=${this.connectionState}`);
       this.autoConnect();
     }
 
@@ -295,17 +294,19 @@ export class RPC2Client {
     // 1) WS 已连接 → 尝试 WS；失败则回退一次 HTTP
     // 2) 其他状态（未连/连接中/重连中/错误）→ 直接 HTTP
     if (this.connectionState === RPC2ConnectionState.CONNECTED) {
-      console.log(`[RPC2] ${method}: 使用 WebSocket 调用`);
       try {
         return await this.callViaWebSocket(method, params, options);
       } catch (wsErr) {
-        console.warn(`[RPC2] ${method}: WebSocket 失败，回退到 HTTP`, wsErr);
-        return await this.callViaHTTP(method, params, options);
+        // 回退一次 HTTP
+        try {
+          return await this.callViaHTTP(method, params, options);
+        } catch (httpErr) {
+          throw httpErr;
+        }
       }
     }
 
     // 未连或重连等情况下，直接使用 HTTP
-    console.log(`[RPC2] ${method}: 使用 HTTP 调用 (WS状态=${this.connectionState})`);
     return this.callViaHTTP(method, params, options);
   }
 
@@ -319,7 +320,6 @@ export class RPC2Client {
     if (!this.ws) return;
 
     this.ws.onopen = () => {
-      console.log('[RPC2] WebSocket 连接成功!');
       this.setConnectionState(RPC2ConnectionState.CONNECTED);
       this.reconnectAttempts = 0;
       this.startHeartbeat(); // 启动心跳包
@@ -336,21 +336,19 @@ export class RPC2Client {
       }
     };
 
-    this.ws.onclose = (event) => {
-      console.log(`[RPC2] WebSocket 关闭: code=${event.code}, reason=${event.reason}`);
+    this.ws.onclose = () => {
       this.setConnectionState(RPC2ConnectionState.DISCONNECTED);
       this.stopHeartbeat(); // 停止心跳包
       this.eventListeners.onDisconnect?.();
 
       if (this.options.autoReconnect &&
         this.reconnectAttempts < this.options.maxReconnectAttempts) {
-        console.log(`[RPC2] 尝试重连... (${this.reconnectAttempts + 1}/${this.options.maxReconnectAttempts})`);
         this.attemptReconnect();
       }
     };
 
     this.ws.onerror = (error) => {
-      console.error("[RPC2] WebSocket 错误:", error);
+      console.error("WebSocket 错误:", error);
       this.eventListeners.onError?.(new Error("WebSocket 连接错误"));
     };
   }
