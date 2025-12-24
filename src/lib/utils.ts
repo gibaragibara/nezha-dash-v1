@@ -368,27 +368,8 @@ function sanitizeTags(tags: string): string {
     .join(" ")
 }
 
-// buildPublicNoteFromNode 缓存（性能优化）
-// key: uuid, value: { cacheKey: string, result: string }
-const publicNoteCacheMap = new Map<string, { cacheKey: string; result: string }>()
-
-// 生成缓存 key，基于影响 public_note 的关键字段
-function getPublicNoteCacheKey(server: any, existingPublicNote?: string): string {
-  return `${server?.billing_cycle || ''}_${server?.auto_renewal || ''}_${server?.price || ''}_${server?.currency || ''}_${server?.expired_at || ''}_${server?.created_at || ''}_${server?.traffic_limit || ''}_${server?.traffic_limit_type || ''}_${server?.ipv4 || ''}_${server?.ipv6 || ''}_${server?.public_remark || ''}_${server?.tags || ''}_${existingPublicNote || ''}`
-}
-
 function buildPublicNoteFromNode(server: any, existingPublicNote?: string): string {
   try {
-    const uuid = server?.uuid
-    const cacheKey = getPublicNoteCacheKey(server, existingPublicNote)
-
-    // 检查缓存
-    if (uuid) {
-      const cached = publicNoteCacheMap.get(uuid)
-      if (cached && cached.cacheKey === cacheKey) {
-        return cached.result
-      }
-    }
 
     // 如果已有结构化的 public_note，先解析出来以便合并
     const existing = parsePublicNote(existingPublicNote || "") || undefined
@@ -448,14 +429,7 @@ function buildPublicNoteFromNode(server: any, existingPublicNote?: string): stri
       },
     }
 
-    const result = JSON.stringify(merged)
-
-    // 保存到缓存
-    if (uuid) {
-      publicNoteCacheMap.set(uuid, { cacheKey, result })
-    }
-
-    return result
+    return JSON.stringify(merged)
   } catch (e) {
     console.error("buildPublicNoteFromNode error:", e)
     return existingPublicNote || ""
@@ -467,8 +441,6 @@ export const komariToNezhaWebsocketResponse = (data: any): NezhaWebsocketRespons
     getKomariNodes()
       .then((res) => {
         km_servers_cache = Object.values(res || {})
-        // 当节点列表更新时，清空服务器静态信息缓存
-        serverStaticCache.clear()
       })
   }
 
@@ -490,35 +462,20 @@ export const komariToNezhaWebsocketResponse = (data: any): NezhaWebsocketRespons
       statusMap.delete(uuid)
     }
 
-    // 获取或创建服务器静态信息缓存
-    let staticInfo = serverStaticCache.get(uuid)
-    if (!staticInfo) {
-      const processedTag = server.tags ? sanitizeTags(String(server.tags)) : undefined
-      staticInfo = {
-        id: uuidToNumber(uuid),
-        name: server.name,
-        tag: processedTag,
-        public_note: buildPublicNoteFromNode(server, server.public_remark || ""),
-        country_code: countryFlagToCode(server.region),
-        display_index: -server.weight || 0,
-        host: {
-          platform: server.os,
-          platform_version: server.kernel_version,
-          cpu: [server.cpu_name],
-          gpu: server.gpu_name ? [server.gpu_name] : [],
-          mem_total: server.mem_total,
-          disk_total: server.disk_total,
-          swap_total: server.swap_total,
-          arch: server.arch,
-          boot_time: 0, // 动态计算
-          version: "",
-        },
-      }
-      serverStaticCache.set(uuid, staticInfo)
-    }
-
-    // 动态计算 boot_time（这是变化的部分）
     const bootTime = status ? new Date(status.time).getTime() / 1000 - (status.uptime || 0) : 0
+
+    const host = {
+      platform: server.os,
+      platform_version: server.kernel_version,
+      cpu: [server.cpu_name],
+      gpu: server.gpu_name ? [server.gpu_name] : [],
+      mem_total: server.mem_total,
+      disk_total: server.disk_total,
+      swap_total: server.swap_total,
+      arch: server.arch,
+      boot_time: bootTime,
+      version: "",
+    }
 
     const state = status
       ? {
@@ -540,15 +497,36 @@ export const komariToNezhaWebsocketResponse = (data: any): NezhaWebsocketRespons
         temperatures: status.temp > 0 ? [{ Name: "CPU", Temperature: status.temp }] : [],
         gpu: server.gpu_name && typeof status.gpu === "number" ? [status.gpu] : [],
       }
-      : OFFLINE_STATE
+      : {
+        cpu: 0,
+        mem_used: 0,
+        swap_used: 0,
+        disk_used: 0,
+        net_in_transfer: 0,
+        net_out_transfer: 0,
+        net_in_speed: 0,
+        net_out_speed: 0,
+        uptime: 0,
+        load_1: 0,
+        load_5: 0,
+        load_15: 0,
+        tcp_conn_count: 0,
+        udp_conn_count: 0,
+        process_count: 0,
+        temperatures: [],
+        gpu: [],
+      }
 
+    const processedTag = server.tags ? sanitizeTags(String(server.tags)) : undefined
     return {
-      ...staticInfo,
+      id: uuidToNumber(uuid),
+      name: server.name,
+      tag: processedTag,
+      public_note: buildPublicNoteFromNode(server, server.public_remark || ""),
       last_active: status ? status.time : "0000-00-00T00:00:00Z",
-      host: {
-        ...staticInfo.host,
-        boot_time: bootTime,
-      },
+      country_code: countryFlagToCode(server.region),
+      display_index: -server.weight || 0,
+      host,
       state,
     }
   })
@@ -561,30 +539,6 @@ export const komariToNezhaWebsocketResponse = (data: any): NezhaWebsocketRespons
     servers,
   }
 }
-
-// 服务器静态信息缓存（性能优化）
-const serverStaticCache = new Map<string, any>()
-
-// 离线状态常量（避免重复创建对象）
-const OFFLINE_STATE = Object.freeze({
-  cpu: 0,
-  mem_used: 0,
-  swap_used: 0,
-  disk_used: 0,
-  net_in_transfer: 0,
-  net_out_transfer: 0,
-  net_in_speed: 0,
-  net_out_speed: 0,
-  uptime: 0,
-  load_1: 0,
-  load_5: 0,
-  load_15: 0,
-  tcp_conn_count: 0,
-  udp_conn_count: 0,
-  process_count: 0,
-  temperatures: [],
-  gpu: [],
-})
 
 let __nodesCache__: any = null
 let __nodesCachePromise__: Promise<any> | null = null
@@ -604,10 +558,6 @@ export const getKomariNodes = async () => {
     .call("common:getNodes")
     .then((res) => {
       __nodesCache__ = res
-      // 【关键修复】同时更新 km_servers_cache，确保 komariToNezhaWebsocketResponse 可以立即使用
-      km_servers_cache = Object.values(res || {})
-      serverStaticCache.clear()
-
       // 设置 TTL 到期清理
       setTimeout(() => {
         __nodesCache__ = null
