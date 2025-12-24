@@ -62,20 +62,56 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ url, child
     const initStart = performance.now()
     console.log("[NezhaPerf] ===== 开始初始化 =====")
 
-    // 【关键优化】并行加载：同时发起节点列表和状态请求
-    const nodesStart = performance.now()
-    const statusStart = performance.now()
+    const rpc2 = SharedClient()
 
-    Promise.all([
-      getKomariNodes().then(res => {
-        console.log(`[NezhaPerf] getKomariNodes (common:getNodes) 完成: ${(performance.now() - nodesStart).toFixed(0)}ms`)
-        return res
-      }),
-      SharedClient().call("common:getNodesLatestStatus").then(res => {
-        console.log(`[NezhaPerf] getNodesLatestStatus 完成: ${(performance.now() - statusStart).toFixed(0)}ms`)
-        return res
+    // 【关键修复】等待 WebSocket 连接成功后再获取数据
+    // 这样可以使用快速的 WebSocket 通道，而不是回退到慢的 HTTP
+    const waitForConnection = (): Promise<void> => {
+      return new Promise((resolve) => {
+        // 如果已经连接成功，直接返回
+        if (rpc2.state === 'connected') {
+          console.log("[NezhaPerf] WebSocket 已连接，立即开始获取数据")
+          resolve()
+          return
+        }
+
+        console.log(`[NezhaPerf] 等待 WebSocket 连接... (当前状态: ${rpc2.state})`)
+
+        // 设置一个监听器等待连接成功
+        const checkInterval = setInterval(() => {
+          if (rpc2.state === 'connected') {
+            clearInterval(checkInterval)
+            clearTimeout(timeout)
+            console.log("[NezhaPerf] WebSocket 连接成功，开始获取数据")
+            resolve()
+          }
+        }, 50) // 每 50ms 检查一次
+
+        // 设置超时，避免无限等待（2秒后无论如何都开始）
+        const timeout = setTimeout(() => {
+          clearInterval(checkInterval)
+          console.log(`[NezhaPerf] 等待超时，使用当前状态开始获取数据 (状态: ${rpc2.state})`)
+          resolve()
+        }, 2000)
       })
-    ]).then(([_nodes, statusData]) => {
+    }
+
+    // 先等待 WebSocket 连接，再获取数据
+    waitForConnection().then(() => {
+      const nodesStart = performance.now()
+      const statusStart = performance.now()
+
+      return Promise.all([
+        getKomariNodes().then(res => {
+          console.log(`[NezhaPerf] getKomariNodes (common:getNodes) 完成: ${(performance.now() - nodesStart).toFixed(0)}ms`)
+          return res
+        }),
+        rpc2.call("common:getNodesLatestStatus").then(res => {
+          console.log(`[NezhaPerf] getNodesLatestStatus 完成: ${(performance.now() - statusStart).toFixed(0)}ms`)
+          return res
+        })
+      ])
+    }).then(([_nodes, statusData]) => {
       const parallelEnd = performance.now()
       console.log(`[NezhaPerf] 并行请求总耗时: ${(parallelEnd - initStart).toFixed(0)}ms`)
 
