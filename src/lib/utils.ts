@@ -604,6 +604,10 @@ export const getKomariNodes = async () => {
     .call("common:getNodes")
     .then((res) => {
       __nodesCache__ = res
+      // 【关键修复】同时更新 km_servers_cache，确保 komariToNezhaWebsocketResponse 可以立即使用
+      km_servers_cache = Object.values(res || {})
+      serverStaticCache.clear()
+
       // 设置 TTL 到期清理
       setTimeout(() => {
         __nodesCache__ = null

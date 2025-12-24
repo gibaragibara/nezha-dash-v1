@@ -18,6 +18,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ url, child
   // 使用 ref 缓存已序列化的消息，避免重复序列化
   const lastSerializedRef = useRef<string | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const isInitializedRef = useRef(false)
 
   const getData = useCallback(() => {
     const rpc2 = SharedClient()
@@ -42,18 +43,30 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ url, child
   }, [])
 
   useEffect(() => {
-    // 预加载节点缓存
-    getKomariNodes()
+    // 避免 React StrictMode 重复初始化
+    if (isInitializedRef.current) return
+    isInitializedRef.current = true
 
-    // 首次获取数据
-    getData().then(() => {
-      setConnected(true)
-    })
+    const initialize = async () => {
+      try {
+        // 【关键修复】先等待节点列表加载完成，再获取状态数据
+        // 这样可以确保首次调用 komariToNezhaWebsocketResponse 时缓存已就绪
+        await getKomariNodes()
 
-    // 设置定时轮询，并保存引用以便清理
-    intervalRef.current = setInterval(() => {
-      getData()
-    }, 2000)
+        // 然后获取实时状态
+        await getData()
+        setConnected(true)
+
+        // 设置定时轮询
+        intervalRef.current = setInterval(() => {
+          getData()
+        }, 2000)
+      } catch (err) {
+        console.error("初始化失败:", err)
+      }
+    }
+
+    initialize()
 
     // 清理函数：组件卸载时清除定时器
     return () => {
