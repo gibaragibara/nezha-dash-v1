@@ -22,10 +22,21 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ url, child
 
   const getData = useCallback(() => {
     const rpc2 = SharedClient()
+    const t0 = performance.now()
     return rpc2.call("common:getNodesLatestStatus").then((res) => {
+      const t1 = performance.now()
+      console.log(`[NezhaPerf] getNodesLatestStatus RPC: ${(t1 - t0).toFixed(0)}ms`)
+
+      const t2 = performance.now()
       const nzwsres = komariToNezhaWebsocketResponse(res)
+      const t3 = performance.now()
+      console.log(`[NezhaPerf] komariToNezhaWebsocketResponse: ${(t3 - t2).toFixed(0)}ms`)
+
       // 只序列化一次
       const serialized = JSON.stringify(nzwsres)
+      const t4 = performance.now()
+      console.log(`[NezhaPerf] JSON.stringify: ${(t4 - t3).toFixed(0)}ms`)
+
       const messageObj = { data: serialized }
 
       // 只有数据变化时才更新状态，减少不必要的渲染
@@ -37,6 +48,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ url, child
           return updated.slice(0, 30)
         })
       }
+      console.log(`[NezhaPerf] getData 总耗时: ${(t4 - t0).toFixed(0)}ms`)
     }).catch((err) => {
       console.error("获取节点状态失败:", err)
     })
@@ -47,26 +59,54 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ url, child
     if (isInitializedRef.current) return
     isInitializedRef.current = true
 
-    const initialize = async () => {
-      try {
-        // 【关键修复】先等待节点列表加载完成，再获取状态数据
-        // 这样可以确保首次调用 komariToNezhaWebsocketResponse 时缓存已就绪
-        await getKomariNodes()
+    const initStart = performance.now()
+    console.log("[NezhaPerf] ===== 开始初始化 =====")
 
-        // 然后获取实时状态
-        await getData()
-        setConnected(true)
+    // 【关键优化】并行加载：同时发起节点列表和状态请求
+    const nodesStart = performance.now()
+    const statusStart = performance.now()
 
-        // 设置定时轮询
-        intervalRef.current = setInterval(() => {
-          getData()
-        }, 2000)
-      } catch (err) {
-        console.error("初始化失败:", err)
-      }
-    }
+    Promise.all([
+      getKomariNodes().then(res => {
+        console.log(`[NezhaPerf] getKomariNodes (common:getNodes) 完成: ${(performance.now() - nodesStart).toFixed(0)}ms`)
+        return res
+      }),
+      SharedClient().call("common:getNodesLatestStatus").then(res => {
+        console.log(`[NezhaPerf] getNodesLatestStatus 完成: ${(performance.now() - statusStart).toFixed(0)}ms`)
+        return res
+      })
+    ]).then(([_nodes, statusData]) => {
+      const parallelEnd = performance.now()
+      console.log(`[NezhaPerf] 并行请求总耗时: ${(parallelEnd - initStart).toFixed(0)}ms`)
 
-    initialize()
+      // 节点列表已在 getKomariNodes 内部更新到 km_servers_cache
+      const convertStart = performance.now()
+      const nzwsres = komariToNezhaWebsocketResponse(statusData)
+      console.log(`[NezhaPerf] 首次数据转换: ${(performance.now() - convertStart).toFixed(0)}ms`)
+
+      const serialized = JSON.stringify(nzwsres)
+      const messageObj = { data: serialized }
+
+      lastSerializedRef.current = serialized
+      setLastMessage(messageObj)
+      setMessageHistory([messageObj])
+      setConnected(true)
+
+      console.log(`[NezhaPerf] ===== 初始化完成，总耗时: ${(performance.now() - initStart).toFixed(0)}ms =====`)
+      console.log(`[NezhaPerf] 服务器数量: ${nzwsres.servers?.length || 0}`)
+
+      // 设置定时轮询
+      intervalRef.current = setInterval(() => {
+        getData()
+      }, 2000)
+    }).catch((err) => {
+      console.error("初始化失败:", err)
+      // 即使失败也启动轮询，让后续请求可以重试
+      setConnected(true)
+      intervalRef.current = setInterval(() => {
+        getData()
+      }, 2000)
+    })
 
     // 清理函数：组件卸载时清除定时器
     return () => {
