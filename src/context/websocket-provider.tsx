@@ -1,6 +1,6 @@
 import { SharedClient } from "@/hooks/use-rpc2"
 import { getKomariNodes, komariToNezhaWebsocketResponse } from "@/lib/utils"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef, useCallback } from "react"
 
 import { WebSocketContext, WebSocketContextType } from "./websocket-context"
 
@@ -11,38 +11,58 @@ interface WebSocketProviderProps {
 
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ url, children }) => {
   const [lastMessage, setLastMessage] = useState<{ data: string } | null>(null)
-  const [messageHistory, setMessageHistory] = useState<{ data: string }[]>([]) // 新增历史消息状态
+  const [messageHistory, setMessageHistory] = useState<{ data: string }[]>([])
   const [connected, setConnected] = useState(false)
   const [needReconnect, setNeedReconnect] = useState(false)
-  // const ws = useRef<WebSocket | null>(null)
-  // const reconnectTimeout = useRef<NodeJS.Timeout>(null)
-  // const maxReconnectAttempts = 30
-  // const reconnectAttempts = useRef(0)
-  // const isConnecting = useRef(false)
 
-  const getData = () => {
+  // 使用 ref 缓存已序列化的消息，避免重复序列化
+  const lastSerializedRef = useRef<string | null>(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const getData = useCallback(() => {
     const rpc2 = SharedClient()
     return rpc2.call("common:getNodesLatestStatus").then((res) => {
-      //console.log(res)
       const nzwsres = komariToNezhaWebsocketResponse(res)
-      setLastMessage({ data: JSON.stringify(nzwsres) })
-      setMessageHistory((prev) => {
-        const updated = [{ data: JSON.stringify(nzwsres) }, ...prev]
-        return updated.slice(0, 30)
-      })
+      // 只序列化一次
+      const serialized = JSON.stringify(nzwsres)
+      const messageObj = { data: serialized }
+
+      // 只有数据变化时才更新状态，减少不必要的渲染
+      if (serialized !== lastSerializedRef.current) {
+        lastSerializedRef.current = serialized
+        setLastMessage(messageObj)
+        setMessageHistory((prev) => {
+          const updated = [messageObj, ...prev]
+          return updated.slice(0, 30)
+        })
+      }
+    }).catch((err) => {
+      console.error("获取节点状态失败:", err)
     })
-  }
+  }, [])
 
   useEffect(() => {
-    getKomariNodes() // 尝试缓存
+    // 预加载节点缓存
+    getKomariNodes()
+
+    // 首次获取数据
     getData().then(() => {
       setConnected(true)
     })
 
-    setInterval(() => {
+    // 设置定时轮询，并保存引用以便清理
+    intervalRef.current = setInterval(() => {
       getData()
     }, 2000)
-  }, [])
+
+    // 清理函数：组件卸载时清除定时器
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+    }
+  }, [getData])
 
   const cleanup = () => {
     return
