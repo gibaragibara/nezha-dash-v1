@@ -1,3 +1,4 @@
+import { SharedClient } from "@/hooks/use-rpc2"
 import { getKomariNodes, komariToNezhaWebsocketResponse } from "@/lib/utils"
 import React, { useEffect, useState, useRef, useCallback } from "react"
 
