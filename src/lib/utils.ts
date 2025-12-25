@@ -339,6 +339,9 @@ export const uuidToNumber = (uuid: string): number => {
 
 let km_servers_cache: any[] = []
 
+// 预编译颜色标签正则表达式（性能优化）
+const COLOR_PATTERN = /<\s*(?:Gray|Gold|Bronze|Brown|Yellow|Amber|Orange|Tomato|Red|Ruby|Crimson|Pink|Plum|Purple|Violet|Iris|Indigo|Blue|Cyan|Teal|Jade|Green|Grass|Lime|Mint|Sky)\s*>/ig
+
 const countryFlagToCode = (flag: string): string => {
   return [...flag].map((c) => String.fromCharCode(c.codePointAt(0)! - 127397 + 32)).join("")
 }
@@ -358,44 +361,16 @@ function deriveCycleLabel(billing_cycle?: number): string {
 
 // 清洗 tags：将分隔符 ";" 替换为空格，并移除颜色标签（不区分大小写）
 function sanitizeTags(tags: string): string {
-  const COLORS = [
-    "Gray",
-    "Gold",
-    "Bronze",
-    "Brown",
-    "Yellow",
-    "Amber",
-    "Orange",
-    "Tomato",
-    "Red",
-    "Ruby",
-    "Crimson",
-    "Pink",
-    "Plum",
-    "Purple",
-    "Violet",
-    "Iris",
-    "Indigo",
-    "Blue",
-    "Cyan",
-    "Teal",
-    "Jade",
-    "Green",
-    "Grass",
-    "Lime",
-    "Mint",
-    "Sky",
-  ]
-  const colorPattern = new RegExp(`<\\s*(?:${COLORS.join("|")})\\s*>`, "ig")
   return tags
     .split(";")
-    .map((part) => part.replace(colorPattern, "").trim())
+    .map((part) => part.replace(COLOR_PATTERN, "").trim())
     .filter(Boolean)
     .join(" ")
 }
 
 function buildPublicNoteFromNode(server: any, existingPublicNote?: string): string {
   try {
+
     // 如果已有结构化的 public_note，先解析出来以便合并
     const existing = parsePublicNote(existingPublicNote || "") || undefined
     const bc: number = Number(server?.billing_cycle || 0)
@@ -469,63 +444,12 @@ export const komariToNezhaWebsocketResponse = (data: any): NezhaWebsocketRespons
       })
   }
 
-  // 如果还没有缓存，先按 data 渲染，避免首次为空
+  // 如果还没有缓存，先返回空数组，避免首次为空
   if (!km_servers_cache || km_servers_cache.length === 0) {
     return {
       now: Date.now(),
       servers: [],
     }
-    // const servers: any[] = Object.entries(data || {}).reduce((acc: any[], [uuid, status]: [string, any]) => {
-    //   const host = {
-    //     platform: status.os || "",
-    //     platform_version: status.kernel_version || "",
-    //     cpu: status.cpu_name ? [status.cpu_name] : [],
-    //     gpu: status.gpu_name ? [status.gpu_name] : [],
-    //     mem_total: status.ram_total || 0,
-    //     disk_total: status.disk_total || 0,
-    //     swap_total: status.swap_total || 0,
-    //     arch: status.arch || "",
-    //     boot_time: new Date(status.time).getTime() / 1000 - (status.uptime || 0),
-    //     version: "",
-    //   }
-
-    //   const state = {
-    //     cpu: status.cpu || 0,
-    //     mem_used: status.ram || 0,
-    //     swap_used: status.swap || 0,
-    //     disk_used: status.disk || 0,
-    //     net_in_transfer: status.net_total_down || 0,
-    //     net_out_transfer: status.net_total_up || 0,
-    //     net_in_speed: status.net_in || 0,
-    //     net_out_speed: status.net_out || 0,
-    //     uptime: status.uptime || 0,
-    //     load_1: status.load || 0,
-    //     load_5: status.load5 || 0,
-    //     load_15: status.load15 || 0,
-    //     tcp_conn_count: status.connections || 0,
-    //     udp_conn_count: status.connections_udp || 0,
-    //     process_count: status.process || 0,
-    //     temperatures: status.temp > 0 ? [{ Name: "CPU", Temperature: status.temp }] : [],
-    //     gpu: typeof status.gpu === "number" ? [status.gpu] : [],
-    //   }
-
-    //   acc.push({
-    //     id: uuidToNumber(uuid),
-    //     name: status.name || uuid,
-    //     public_note: "",
-    //     last_active: status.time,
-    //     country_code: status.region ? countryFlagToCode(status.region) : "",
-    //     display_index: 0,
-    //     host,
-    //     state,
-    //   })
-    //   return acc
-    // }, [])
-
-    // return {
-    //   now: Date.now(),
-    //   servers,
-    // }
   }
 
   // 按缓存列表展示；如果 data 中没有该 uuid，则视为离线
