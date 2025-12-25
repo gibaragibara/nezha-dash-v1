@@ -1,6 +1,6 @@
 import { SharedClient } from "@/hooks/use-rpc2"
 import { getKomariNodes, komariToNezhaWebsocketResponse } from "@/lib/utils"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef, useCallback } from "react"
 
 import { WebSocketContext, WebSocketContextType } from "./websocket-context"
 
@@ -9,147 +9,69 @@ interface WebSocketProviderProps {
   children: React.ReactNode
 }
 
-export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ url, children }) => {
+/**
+ * WebSocket Provider - 性能优化版
+ * 参考 purcarte 的 LiveDataProvider 实现
+ * 使用 HTTP 轮询获取实时数据，更稳定更快
+ */
+export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }) => {
   const [lastMessage, setLastMessage] = useState<{ data: string } | null>(null)
-  const [messageHistory, setMessageHistory] = useState<{ data: string }[]>([]) // 新增历史消息状态
+  const [messageHistory, setMessageHistory] = useState<{ data: string }[]>([])
   const [connected, setConnected] = useState(false)
   const [needReconnect, setNeedReconnect] = useState(false)
-  // const ws = useRef<WebSocket | null>(null)
-  // const reconnectTimeout = useRef<NodeJS.Timeout>(null)
-  // const maxReconnectAttempts = 30
-  // const reconnectAttempts = useRef(0)
-  // const isConnecting = useRef(false)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const isInitialLoad = useRef(true)
 
-  const getData = () => {
-    const rpc2 = SharedClient()
-    return rpc2.call("common:getNodesLatestStatus").then((res) => {
-      //console.log(res)
+  // 获取节点最新状态
+  const getData = useCallback(async () => {
+    try {
+      const rpc2 = SharedClient()
+      const res = await rpc2.call("common:getNodesLatestStatus")
       const nzwsres = komariToNezhaWebsocketResponse(res)
-      setLastMessage({ data: JSON.stringify(nzwsres) })
+      const message = { data: JSON.stringify(nzwsres) }
+
+      setLastMessage(message)
       setMessageHistory((prev) => {
-        const updated = [{ data: JSON.stringify(nzwsres) }, ...prev]
+        const updated = [message, ...prev]
         return updated.slice(0, 30)
       })
-    })
-  }
 
-  useEffect(() => {
-    getKomariNodes() // 尝试缓存
-    getData().then(() => {
-      setConnected(true)
-    })
-
-    setInterval(() => {
-      getData()
-    }, 2000)
+      if (isInitialLoad.current) {
+        isInitialLoad.current = false
+        setConnected(true)
+      }
+    } catch (error) {
+      console.error("[WebSocketProvider] Failed to get data:", error)
+    }
   }, [])
 
-  const cleanup = () => {
-    return
-    // 使用RPC2自动管理
-    // if (ws.current) {
-    //   // 移除所有事件监听器
-    //   ws.current.onopen = null
-    //   ws.current.onclose = null
-    //   ws.current.onmessage = null
-    //   ws.current.onerror = null
-
-    //   if (ws.current.readyState === WebSocket.OPEN || ws.current.readyState === WebSocket.CONNECTING) {
-    //     ws.current.close()
-    //   }
-    //   ws.current = null
-    // }
-    // if (reconnectTimeout.current) {
-    //   clearTimeout(reconnectTimeout.current)
-    //   reconnectTimeout.current = null
-    // }
-    // setConnected(false)
-  }
-
-  const connect = () => {
-    return
-    // 使用RPC2自动管理
-    // if (isConnecting.current) {
-    //   console.log("Connection already in progress")
-    //   return
-    // }
-
-    // cleanup()
-    // isConnecting.current = true
-
-    // try {
-    //   const wsUrl = new URL(url, window.location.origin)
-    //   wsUrl.protocol = wsUrl.protocol.replace("http", "ws")
-
-    //   ws.current = new WebSocket(wsUrl.toString())
-
-    //   ws.current.onopen = () => {
-    //     console.log("WebSocket connected")
-    //     setConnected(true)
-    //     reconnectAttempts.current = 0
-    //     isConnecting.current = false
-    //   }
-
-    //   ws.current.onclose = () => {
-    //     console.log("WebSocket disconnected")
-    //     setConnected(false)
-    //     ws.current = null
-    //     isConnecting.current = false
-
-    //     if (reconnectAttempts.current < maxReconnectAttempts) {
-    //       reconnectTimeout.current = setTimeout(() => {
-    //         reconnectAttempts.current++
-    //         connect()
-    //       }, 3000)
-    //     }
-    //   }
-
-    //   ws.current.onmessage = (event) => {
-    //     const newMessage = { data: event.data }
-    //     setLastMessage(newMessage)
-    //     // 更新历史消息，保持最新的30条记录
-    //     setMessageHistory((prev) => {
-    //       const updated = [newMessage, ...prev]
-    //       return updated.slice(0, 30)
-    //     })
-    //   }
-
-    //   ws.current.onerror = (error) => {
-    //     console.error("WebSocket error:", error)
-    //     isConnecting.current = false
-    //   }
-    // } catch (error) {
-    //   console.error("WebSocket connection error:", error)
-    //   isConnecting.current = false
-    // }
-  }
-
-  const reconnect = () => {
-    return
-    // 使用RPC2自动管理
-    // reconnectAttempts.current = 0
-    // // 等待一个小延时确保清理完成
-    // cleanup()
-    // setTimeout(() => {
-    //   connect()
-    // }, 1000)
-  }
-
+  // 初始化和轮询
   useEffect(() => {
-    connect()
+    // 预加载节点数据（缓存）
+    getKomariNodes()
 
-    // 添加页面卸载事件监听
-    const handleBeforeUnload = () => {
-      cleanup()
-    }
+    // 首次获取数据
+    getData()
 
-    window.addEventListener("beforeunload", handleBeforeUnload)
+    // 每 2 秒轮询一次（参考 purcarte）
+    intervalRef.current = setInterval(getData, 2000)
 
     return () => {
-      cleanup()
-      window.removeEventListener("beforeunload", handleBeforeUnload)
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
     }
-  }, [url])
+  }, [getData])
+
+  const reconnect = useCallback(() => {
+    // 重新开始轮询
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+    }
+    getData()
+    intervalRef.current = setInterval(getData, 2000)
+  }, [getData])
 
   const contextValue: WebSocketContextType = {
     lastMessage,
@@ -162,3 +84,4 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ url, child
 
   return <WebSocketContext.Provider value={contextValue}>{children}</WebSocketContext.Provider>
 }
+
