@@ -13,26 +13,21 @@ interface ConfigContextType {
 const ConfigContext = createContext<ConfigContextType | null>(null)
 
 export function ConfigProvider({ children }: { children: ReactNode }) {
+  // 性能优化：使用默认配置立即渲染，不阻塞首屏
   const [config, setConfig] = useState<ConfigOptions>(DEFAULT_CONFIG)
-  const [loading, setLoading] = useState(true)
 
-  // 从 Komari API 加载主题配置
+  // 从 Komari API 异步加载主题配置（不阻塞渲染）
   useEffect(() => {
     const loadConfig = async () => {
       try {
         const km_public = await SharedClient().call("common:getPublicInfo")
         if (!km_public.error && km_public.theme_settings) {
           const themeSettings = km_public.theme_settings as Partial<ConfigOptions>
-          setConfig({ ...DEFAULT_CONFIG, ...themeSettings })
-        } else {
-          setConfig(DEFAULT_CONFIG)
+          setConfig((prev) => ({ ...prev, ...themeSettings }))
         }
       } catch (error) {
         console.error("Failed to load theme config from Komari:", error)
-        // 即使加载失败，也设置默认配置
-        setConfig(DEFAULT_CONFIG)
-      } finally {
-        setLoading(false)
+        // 加载失败时保持默认配置，不影响用户体验
       }
     }
     loadConfig()
@@ -49,11 +44,9 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("theme-config")
   }
 
-  if (loading) {
-    return null // 或者显示加载动画
-  }
-
+  // 性能优化：移除 loading 阻塞，直接渲染子组件
   return <ConfigContext.Provider value={{ config, updateConfig, resetConfig }}>{children}</ConfigContext.Provider>
 }
 
 export { ConfigContext }
+
