@@ -101,7 +101,7 @@ export const fetchMonitor = async (server_id: number, hours: number = 24): Promi
       const ts = Date.parse(rec.time)
       if (!Number.isFinite(ts)) continue
       const val = Number(rec.value)
-      if (!Number.isFinite(val) || val === -1) continue
+      if (!Number.isFinite(val)) continue  // 保留 -1（丢包）数据，在图表中显示断点
       s.created_at.push(ts)
       s.avg_delay.push(val)
     }
@@ -124,7 +124,7 @@ export const fetchMonitor = async (server_id: number, hours: number = 24): Promi
       const ts = Date.parse(rec.time)
       if (!Number.isFinite(ts)) continue
       const val = Number(rec.value)
-      if (!Number.isFinite(val) || val === -1) continue
+      if (!Number.isFinite(val)) continue  // 保留 -1（丢包）数据，在图表中显示断点
       s.created_at.push(ts)
       s.avg_delay.push(val)
     }
