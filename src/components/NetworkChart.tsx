@@ -17,7 +17,7 @@ import { Switch } from "./ui/switch"
 
 interface ResultItem {
   created_at: number
-  [key: string]: number
+  [key: string]: number | null  // 支持 null 表示丢包
 }
 
 /**
@@ -199,7 +199,7 @@ export const NetworkChartClient = React.memo(function NetworkChart({
           >
             <span className="whitespace-nowrap text-xs text-muted-foreground">{key}</span>
             <div className="flex flex-col gap-0.5">
-              <span className="text-md font-bold leading-none sm:text-lg">{lastDelay.toFixed(2)}ms</span>
+              <span className="text-md font-bold leading-none sm:text-lg">{lastDelay !== null ? lastDelay.toFixed(2) : 'N/A'}ms</span>
               {avgPacketLoss !== null && <span className="text-xs text-muted-foreground">{avgPacketLoss.toFixed(2)}% avg loss</span>}
             </div>
           </button>
@@ -233,7 +233,7 @@ export const NetworkChartClient = React.memo(function NetworkChart({
           dataKey="avg_delay"
           stroke={getColorByIndex(chart)}
           yAxisId="delay"
-          connectNulls={true}
+          connectNulls={false}
         />,
       )
     } else if (activeCharts.length > 1) {
@@ -249,7 +249,7 @@ export const NetworkChartClient = React.memo(function NetworkChart({
             dataKey={chart}
             stroke={getColorByIndex(chart)}
             name={chart}
-            connectNulls={true}
+            connectNulls={false}
             yAxisId="delay"
           />
         )),
@@ -266,7 +266,7 @@ export const NetworkChartClient = React.memo(function NetworkChart({
             dot={false}
             dataKey={key}
             stroke={getColorByIndex(key)}
-            connectNulls={true}
+            connectNulls={false}
             yAxisId="delay"
           />
         )),
@@ -520,9 +520,13 @@ const transformData = (data: NezhaMonitor[]) => {
     const packetLoss = item.packet_loss || calculatePacketLoss(item.avg_delay)
 
     for (let i = 0; i < item.created_at.length; i++) {
+      // 当延迟值为 0 或负数时，表示丢包，返回 null 使折线图断开
+      const delay = item.avg_delay[i]
+      const normalizedDelay = delay <= 0 ? null : delay
+
       monitorData[monitorName].push({
         created_at: item.created_at[i],
-        avg_delay: item.avg_delay[i],
+        avg_delay: normalizedDelay,
         packet_loss: packetLoss[i],
       })
     }
@@ -553,11 +557,15 @@ const formatData = (rawData: NezhaMonitor[]) => {
       }
 
       const timeIndex = created_at.indexOf(time)
-      // @ts-expect-error - avg_delay is an array
-      result[time][monitor_name] = timeIndex !== -1 ? avg_delay[timeIndex] : null
+      // 当延迟值为 0 或负数时，表示丢包，返回 null 使折线图断开
+      if (timeIndex !== -1) {
+        const delay = avg_delay[timeIndex]
+        result[time][monitor_name] = delay <= 0 ? null : delay
+      } else {
+        result[time][monitor_name] = null
+      }
       // Add packet loss data if available
       if (packetLoss) {
-        // @ts-expect-error - packet_loss is calculated
         result[time][`${monitor_name}_packet_loss`] = timeIndex !== -1 ? packetLoss[timeIndex] : null
       }
     })
