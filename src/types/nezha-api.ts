@@ -87,7 +87,7 @@ export interface MonitorResponse {
 export type ServerMonitorChart = {
   [key: string]: {
     created_at: number
-    avg_delay: number | null  // null 表示丢包，使折线图显示断点
+    avg_delay: number | null  // null 表示丢包
     packet_loss?: number
   }[]
 }
