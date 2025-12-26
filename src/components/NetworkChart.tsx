@@ -17,7 +17,7 @@ import { Switch } from "./ui/switch"
 
 interface ResultItem {
   created_at: number
-  [key: string]: number | null  // 支持 null 表示丢包
+  [key: string]: number | null
 }
 
 /**
@@ -520,13 +520,11 @@ const transformData = (data: NezhaMonitor[]) => {
     const packetLoss = item.packet_loss || calculatePacketLoss(item.avg_delay)
 
     for (let i = 0; i < item.created_at.length; i++) {
-      // 当延迟值为 0 或负数时，表示丢包，返回 null 使折线图断开
+      // 只有负数才表示丢包，返回 null 使折线图断开
       const delay = item.avg_delay[i]
-      const normalizedDelay = delay <= 0 ? null : delay
-
       monitorData[monitorName].push({
         created_at: item.created_at[i],
-        avg_delay: normalizedDelay,
+        avg_delay: delay < 0 ? null : delay,
         packet_loss: packetLoss[i],
       })
     }
@@ -557,10 +555,10 @@ const formatData = (rawData: NezhaMonitor[]) => {
       }
 
       const timeIndex = created_at.indexOf(time)
-      // 当延迟值为 0 或负数时，表示丢包，返回 null 使折线图断开
+      // 只有负数才表示丢包，返回 null 使折线图断开
       if (timeIndex !== -1) {
         const delay = avg_delay[timeIndex]
-        result[time][monitor_name] = delay <= 0 ? null : delay
+        result[time][monitor_name] = delay < 0 ? null : delay
       } else {
         result[time][monitor_name] = null
       }
